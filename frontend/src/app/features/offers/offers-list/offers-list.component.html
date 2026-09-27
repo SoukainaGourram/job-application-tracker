@@ -1,0 +1,229 @@
+<div class="offers-container">
+
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">Mes Offres</h1>
+      <p class="page-subtitle">Suivez et organisez toutes vos opportunités d'emploi et de stage</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/offers/new" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span>Ajouter une offre</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Filter Bar -->
+  <section class="filter-card">
+    <div class="search-box">
+      <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input
+        type="text"
+        placeholder="Rechercher par titre, entreprise, mot-clé..."
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+        (keyup.enter)="onSearch()"
+        class="search-input"
+      />
+      @if (searchTerm()) {
+        <button class="clear-search-btn" (click)="searchTerm.set(''); onSearch()">✕</button>
+      }
+    </div>
+
+    <div class="filters-group">
+      <select
+        [ngModel]="selectedStatus()"
+        (ngModelChange)="selectedStatus.set($event); onFilterChange()"
+        class="select-control"
+      >
+        <option value="">Tous les statuts</option>
+        @for (opt of statusOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+
+      <select
+        [ngModel]="selectedContractType()"
+        (ngModelChange)="selectedContractType.set($event); onFilterChange()"
+        class="select-control"
+      >
+        <option value="">Tous les contrats</option>
+        @for (opt of contractTypeOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+
+      @if (searchTerm() || selectedStatus() || selectedContractType()) {
+        <button class="btn btn-ghost" (click)="resetFilters()">
+          Réinitialiser
+        </button>
+      }
+    </div>
+  </section>
+
+  <!-- Content States -->
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="state-container loading-state">
+      <div class="spinner"></div>
+      <p>Chargement de vos offres...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @else if (errorMessage()) {
+    <div class="state-container error-state">
+      <div class="error-icon">⚠️</div>
+      <h3>Oups ! Une erreur est survenue</h3>
+      <p>{{ errorMessage() }}</p>
+      <button class="btn btn-primary" (click)="loadOffers()">Réessayer</button>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @else if (offers().length === 0) {
+    <div class="state-container empty-state">
+      <div class="empty-icon">📁</div>
+      <h3>Aucune offre trouvée</h3>
+      @if (searchTerm() || selectedStatus() || selectedContractType()) {
+        <p>Aucune offre ne correspond à vos filtres de recherche.</p>
+        <button class="btn btn-ghost" (click)="resetFilters()">Effacer les filtres</button>
+      } @else {
+        <p>Vous n'avez pas encore enregistré d'offres. Commencez dès maintenant !</p>
+        <a routerLink="/offers/new" class="btn btn-primary">Créer ma première offre</a>
+      }
+    </div>
+  }
+
+  <!-- Offers Grid -->
+  @else {
+    <div class="offers-grid">
+      @for (offer of offers(); track offer.id) {
+        <div class="offer-card">
+
+          <!-- Card Header -->
+          <div class="card-header">
+            <div class="badges-row">
+              <span class="badge" [ngClass]="getStatusBadgeClass(offer.status)">
+                {{ getStatusLabel(offer.status) }}
+              </span>
+              <span class="badge badge-contract">{{ offer.contractType }}</span>
+            </div>
+
+            <div class="status-quick-select">
+              <select
+                [ngModel]="offer.status"
+                (ngModelChange)="onQuickStatusChange(offer, $event)"
+                class="quick-select"
+                title="Changer rapidement de statut"
+              >
+                @for (opt of statusOptions; track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <!-- Card Title & Company -->
+          <div class="card-body">
+            <h2 class="offer-title">
+              <a [routerLink]="['/offers', offer.id]">{{ offer.title }}</a>
+            </h2>
+            <div class="offer-company">
+              <span class="company-name">{{ offer.companyName }}</span>
+              @if (offer.city || offer.country) {
+                <span class="company-location">📍 {{ offer.city }}{{ offer.city && offer.country ? ', ' : '' }}{{ offer.country }}</span>
+              }
+            </div>
+
+            <!-- Technologies -->
+            @if (offer.technologies && offer.technologies.length > 0) {
+              <div class="tech-tags">
+                @for (tech of offer.technologies; track tech) {
+                  <span class="tech-tag">{{ tech }}</span>
+                }
+              </div>
+            }
+
+            <!-- Meta details (Salary, Source, Deadline) -->
+            <div class="offer-meta">
+              @if (offer.salary) {
+                <span class="meta-item">💰 {{ offer.salary }}</span>
+              }
+              @if (offer.applicationDeadline) {
+                <span class="meta-item deadline">⏰ Limite : {{ offer.applicationDeadline }}</span>
+              }
+              @if (offer.source) {
+                <span class="meta-item">🔗 {{ offer.source }}</span>
+              }
+            </div>
+          </div>
+
+          <!-- Card Footer & Actions -->
+          <div class="card-footer">
+            <span class="created-date">Ajoutée le {{ offer.createdAt | date:'dd/MM/yyyy' }}</span>
+
+            <div class="card-actions">
+              <a [routerLink]="['/offers', offer.id]" class="btn-icon" title="Voir les détails">
+                👁️
+              </a>
+              <a [routerLink]="['/offers', offer.id, 'edit']" class="btn-icon" title="Modifier">
+                ✏️
+              </a>
+              <button class="btn-icon btn-delete" (click)="confirmDelete(offer.id)" title="Supprimer">
+                🗑️
+              </button>
+            </div>
+          </div>
+
+          <!-- Delete Confirmation Overlay -->
+          @if (deletingOfferId() === offer.id) {
+            <div class="delete-overlay">
+              <p>Confirmer la suppression ?</p>
+              <div class="overlay-actions">
+                <button class="btn btn-sm btn-danger" (click)="executeDelete(offer.id)">Supprimer</button>
+                <button class="btn btn-sm btn-ghost" (click)="cancelDelete()">Annuler</button>
+              </div>
+            </div>
+          }
+
+        </div>
+      }
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages() > 1) {
+      <div class="pagination-bar">
+        <span class="pagination-info">
+          Affichage de {{ offers().length }} sur {{ totalElements() }} offre(s)
+        </span>
+        <div class="pagination-controls">
+          <button
+            class="btn btn-sm btn-secondary"
+            [disabled]="currentPage() === 0"
+            (click)="goToPage(currentPage() - 1)"
+          >
+            ← Précédent
+          </button>
+          <span class="page-number">Page {{ currentPage() + 1 }} / {{ totalPages() }}</span>
+          <button
+            class="btn btn-sm btn-secondary"
+            [disabled]="currentPage() >= totalPages() - 1"
+            (click)="goToPage(currentPage() + 1)"
+          >
+            Suivant →
+          </button>
+        </div>
+      </div>
+    }
+  }
+
+</div>

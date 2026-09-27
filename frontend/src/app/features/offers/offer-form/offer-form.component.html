@@ -1,0 +1,187 @@
+<div class="form-page-container">
+
+  <!-- Header -->
+  <header class="form-header">
+    <a routerLink="/offers" class="back-link">
+      ← Retour aux offres
+    </a>
+    <h1 class="page-title">
+      {{ isEditMode() ? 'Modifier l\'offre' : 'Ajouter une nouvelle offre' }}
+    </h1>
+    <p class="page-subtitle">
+      {{ isEditMode() ? 'Mettez à jour les informations relatives à cette opportunité' : 'Remplissez les détails pour enregistrer et suivre cette opportunité' }}
+    </p>
+  </header>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement des données de l'offre...</p>
+    </div>
+  } @else {
+
+    @if (errorMessage()) {
+      <div class="error-banner">
+        <span>⚠️ {{ errorMessage() }}</span>
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="offer-form">
+
+      <!-- Section: Informations principales -->
+      <div class="form-section">
+        <h2 class="section-title">Informations principales</h2>
+
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="title">Intitulé du poste <span class="required">*</span></label>
+            <input
+              id="title"
+              type="text"
+              formControlName="title"
+              placeholder="ex. Développeur Full Stack Java / Angular"
+              [class.is-invalid]="title.invalid && title.touched"
+            />
+            @if (title.invalid && title.touched) {
+              <span class="field-error">L'intitulé du poste est obligatoire (min. 2 caractères)</span>
+            }
+          </div>
+        </div>
+
+        <div class="form-row two-cols">
+          <div class="form-group">
+            <label for="companyName">Entreprise <span class="required">*</span></label>
+            <input
+              id="companyName"
+              type="text"
+              formControlName="companyName"
+              placeholder="ex. Google, Sopra Steria, Startup..."
+              [class.is-invalid]="companyName.invalid && companyName.touched"
+            />
+            @if (companyName.invalid && companyName.touched) {
+              <span class="field-error">Le nom de l'entreprise est obligatoire</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="contractType">Type de contrat <span class="required">*</span></label>
+            <select id="contractType" formControlName="contractType">
+              @for (opt of contractTypeOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row two-cols">
+          <div class="form-group">
+            <label for="city">Ville</label>
+            <input id="city" type="text" formControlName="city" placeholder="ex. Paris, Lyon, Remote..." />
+          </div>
+
+          <div class="form-group">
+            <label for="country">Pays</label>
+            <input id="country" type="text" formControlName="country" placeholder="ex. France, Maroc, Suisse..." />
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Détails & Technologies -->
+      <div class="form-section">
+        <h2 class="section-title">Détails & Compétences</h2>
+
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="technologiesInput">Technologies / Compétences (séparées par une virgule)</label>
+            <input
+              id="technologiesInput"
+              type="text"
+              formControlName="technologiesInput"
+              placeholder="ex. Java, Spring Boot, Angular, TypeScript, PostgreSQL, Docker"
+            />
+            <span class="field-hint">Séparez chaque mot-clé par une virgule pour générer des tags.</span>
+          </div>
+        </div>
+
+        <div class="form-row three-cols">
+          <div class="form-group">
+            <label for="salary">Rémunération / Salaire</label>
+            <input id="salary" type="text" formControlName="salary" placeholder="ex. 45k - 50k € ou 1200€/mois" />
+          </div>
+
+          <div class="form-group">
+            <label for="source">Source de l'offre</label>
+            <input id="source" type="text" formControlName="source" placeholder="ex. LinkedIn, Indeed, Site web..." />
+          </div>
+
+          <div class="form-group">
+            <label for="applicationDeadline">Date limite de candidature</label>
+            <input id="applicationDeadline" type="date" formControlName="applicationDeadline" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="jobUrl">Lien de l'offre (URL)</label>
+            <input
+              id="jobUrl"
+              type="url"
+              formControlName="jobUrl"
+              placeholder="https://..."
+              [class.is-invalid]="jobUrl.invalid && jobUrl.touched"
+            />
+            @if (jobUrl.invalid && jobUrl.touched) {
+              <span class="field-error">Veuillez renseigner une URL valide (commençant par http:// ou https://)</span>
+            }
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="description">Description du poste & notes</label>
+            <textarea
+              id="description"
+              formControlName="description"
+              rows="5"
+              placeholder="Copiez la fiche de poste ou ajoutez vos notes personnelles..."
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Statut de l'offre -->
+      <div class="form-section">
+        <h2 class="section-title">Statut</h2>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="status">Statut de l'offre <span class="required">*</span></label>
+            <select id="status" formControlName="status">
+              @for (opt of statusOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+          @if (submitting()) {
+            <span class="btn-spinner"></span>
+            <span>Enregistrement en cours...</span>
+          } @else {
+            <span>{{ isEditMode() ? 'Mettre à jour l\'offre' : 'Créer l\'offre' }}</span>
+          }
+        </button>
+
+        <a routerLink="/offers" class="btn btn-secondary">
+          Annuler
+        </a>
+      </div>
+
+    </form>
+  }
+
+</div>

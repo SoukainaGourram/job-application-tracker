@@ -29,12 +29,30 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
         title: 'Dashboard — JobTrack',
       },
-      // Future feature routes (stubs for Phase 3+)
+      // ── Offers Module (Phase 3) ───────────────────────────────────────────
       {
         path: 'offers',
         loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
-        title: 'Offres — JobTrack',
+          import('./features/offers/offers-list/offers-list.component').then(m => m.OffersListComponent),
+        title: 'Mes Offres — JobTrack',
+      },
+      {
+        path: 'offers/new',
+        loadComponent: () =>
+          import('./features/offers/offer-form/offer-form.component').then(m => m.OfferFormComponent),
+        title: 'Ajouter une offre — JobTrack',
+      },
+      {
+        path: 'offers/:id',
+        loadComponent: () =>
+          import('./features/offers/offer-detail/offer-detail.component').then(m => m.OfferDetailComponent),
+        title: 'Détail de l\'offre — JobTrack',
+      },
+      {
+        path: 'offers/:id/edit',
+        loadComponent: () =>
+          import('./features/offers/offer-form/offer-form.component').then(m => m.OfferFormComponent),
+        title: 'Modifier l\'offre — JobTrack',
       },
       {
         path: 'applications',

@@ -1,0 +1,213 @@
+<div class="detail-container">
+
+  <!-- Back navigation -->
+  <div class="nav-bar">
+    <a routerLink="/offers" class="back-link">
+      ← Retour à la liste des offres
+    </a>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="state-container loading-state">
+      <div class="spinner"></div>
+      <p>Chargement des détails de l'offre...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @else if (errorMessage()) {
+    <div class="state-container error-state">
+      <div class="error-icon">⚠️</div>
+      <h3>Offre introuvable</h3>
+      <p>{{ errorMessage() }}</p>
+      <a routerLink="/offers" class="btn btn-primary">Retour aux offres</a>
+    </div>
+  }
+
+  <!-- Offer Content -->
+  @else if (offer(); as currentOffer) {
+    <div class="detail-content">
+
+      <!-- Header Card -->
+      <section class="detail-header-card">
+        <div class="header-main">
+          <div class="badges-row">
+            <span class="badge" [ngClass]="getStatusBadgeClass(currentOffer.status)">
+              {{ getStatusLabel(currentOffer.status) }}
+            </span>
+            <span class="badge badge-contract">{{ currentOffer.contractType }}</span>
+            @if (currentOffer.source) {
+              <span class="badge badge-source">{{ currentOffer.source }}</span>
+            }
+          </div>
+
+          <h1 class="offer-title">{{ currentOffer.title }}</h1>
+
+          <div class="company-row">
+            <span class="company-name">🏢 {{ currentOffer.companyName }}</span>
+            @if (currentOffer.city || currentOffer.country) {
+              <span class="company-location">📍 {{ currentOffer.city }}{{ currentOffer.city && currentOffer.country ? ', ' : '' }}{{ currentOffer.country }}</span>
+            }
+            @if (currentOffer.salary) {
+              <span class="salary-tag">💰 {{ currentOffer.salary }}</span>
+            }
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="header-actions">
+          <button class="btn btn-apply" (click)="onApplyClick()">
+            <span>🚀 Postuler</span>
+          </button>
+
+          <a [routerLink]="['/offers', currentOffer.id, 'edit']" class="btn btn-secondary">
+            ✏️ Modifier
+          </a>
+
+          <button class="btn btn-ghost btn-delete" (click)="promptDelete()">
+            🗑️ Supprimer
+          </button>
+        </div>
+      </section>
+
+      <!-- Apply Notice Banner (Phase 4 explanation) -->
+      @if (showApplyNotice()) {
+        <div class="notice-banner">
+          <div class="notice-content">
+            <span class="notice-icon">ℹ️</span>
+            <div>
+              <strong>Candidature directe bientôt disponible !</strong>
+              <p>Le module de candidature (Application & Pipeline Kanban) sera actif dans la prochaine phase (Phase 4). Vous pourrez transformer cette offre en candidature en 1 clic.</p>
+            </div>
+          </div>
+          <button class="btn-close" (click)="closeApplyNotice()">✕</button>
+        </div>
+      }
+
+      <!-- Grid layout for Details & Sidebar -->
+      <div class="detail-body-grid">
+
+        <!-- Left / Main Column: Description & Technologies -->
+        <div class="main-column">
+
+          <!-- Technologies Section -->
+          @if (currentOffer.technologies && currentOffer.technologies.length > 0) {
+            <div class="content-card">
+              <h2 class="card-title">Compétences & Technologies</h2>
+              <div class="tech-chips">
+                @for (tech of currentOffer.technologies; track tech) {
+                  <span class="tech-chip">{{ tech }}</span>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Description Section -->
+          <div class="content-card">
+            <h2 class="card-title">Description du poste</h2>
+            @if (currentOffer.description) {
+              <div class="description-text">{{ currentOffer.description }}</div>
+            } @else {
+              <p class="empty-field-text">Aucune description détaillée enregistrée pour cette offre.</p>
+            }
+          </div>
+
+        </div>
+
+        <!-- Right Column: Metadata & Quick Controls -->
+        <aside class="side-column">
+
+          <!-- Quick Status Changer -->
+          <div class="content-card">
+            <h3 class="card-subtitle">Statut actuel</h3>
+            <select
+              [ngModel]="currentOffer.status"
+              (ngModelChange)="onStatusChange($event)"
+              class="status-select-full"
+            >
+              @for (opt of statusOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Job URL Link -->
+          @if (currentOffer.jobUrl) {
+            <div class="content-card">
+              <h3 class="card-subtitle">Annonce originale</h3>
+              <a [href]="currentOffer.jobUrl" target="_blank" rel="noopener noreferrer" class="btn btn-outline full-width">
+                <span>Ouvrir l'annonce externe</span>
+                <span class="external-icon">↗</span>
+              </a>
+            </div>
+          }
+
+          <!-- Metadata info list -->
+          <div class="content-card metadata-card">
+            <h3 class="card-subtitle">Informations clés</h3>
+            <ul class="meta-list">
+              <li>
+                <span class="meta-label">Type de contrat :</span>
+                <span class="meta-val">{{ currentOffer.contractType }}</span>
+              </li>
+              @if (currentOffer.city) {
+                <li>
+                  <span class="meta-label">Ville :</span>
+                  <span class="meta-val">{{ currentOffer.city }}</span>
+                </li>
+              }
+              @if (currentOffer.country) {
+                <li>
+                  <span class="meta-label">Pays :</span>
+                  <span class="meta-val">{{ currentOffer.country }}</span>
+                </li>
+              }
+              @if (currentOffer.salary) {
+                <li>
+                  <span class="meta-label">Rémunération :</span>
+                  <span class="meta-val">{{ currentOffer.salary }}</span>
+                </li>
+              }
+              @if (currentOffer.applicationDeadline) {
+                <li>
+                  <span class="meta-label">Date limite :</span>
+                  <span class="meta-val highlight-deadline">⏰ {{ currentOffer.applicationDeadline }}</span>
+                </li>
+              }
+              <li>
+                <span class="meta-label">Enregistrée le :</span>
+                <span class="meta-val">{{ currentOffer.createdAt | date:'dd MMMM yyyy' }}</span>
+              </li>
+              @if (currentOffer.updatedAt) {
+                <li>
+                  <span class="meta-label">Dernière mise à jour :</span>
+                  <span class="meta-val">{{ currentOffer.updatedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                </li>
+              }
+            </ul>
+          </div>
+
+        </aside>
+
+      </div>
+
+      <!-- Delete Confirmation Modal -->
+      @if (showDeleteConfirm()) {
+        <div class="modal-backdrop">
+          <div class="modal-card">
+            <div class="modal-icon">⚠️</div>
+            <h3>Supprimer cette offre ?</h3>
+            <p>Êtes-vous sûr de vouloir supprimer définitivement l'offre <strong>"{{ currentOffer.title }}"</strong> ? Cette action est irréversible.</p>
+            <div class="modal-actions">
+              <button class="btn btn-danger" (click)="executeDelete()">Supprimer définitivement</button>
+              <button class="btn btn-secondary" (click)="cancelDelete()">Annuler</button>
+            </div>
+          </div>
+        </div>
+      }
+
+    </div>
+  }
+
+</div>
