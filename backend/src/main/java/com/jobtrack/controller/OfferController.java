@@ -32,6 +32,7 @@ import java.util.Map;
 public class OfferController {
 
     private final OfferService offerService;
+    private final com.jobtrack.service.ApplicationService applicationService;
 
     @GetMapping
     @Operation(summary = "Lister les offres", description = "Retourne la liste paginée et filtrée des offres de l'utilisateur connecté")
@@ -105,6 +106,16 @@ public class OfferController {
 
         offerService.deleteOffer(id, user);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{offerId}/applications")
+    @Operation(summary = "Postuler à une offre", description = "Crée une candidature associée à cette offre pour l'utilisateur connecté")
+    public ResponseEntity<com.jobtrack.dto.response.ApplicationResponse> createApplicationFromOffer(
+            @PathVariable Long offerId,
+            @AuthenticationPrincipal User user) {
+
+        com.jobtrack.dto.response.ApplicationResponse created = applicationService.createApplicationFromOffer(offerId, user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PostMapping("/parse-url")

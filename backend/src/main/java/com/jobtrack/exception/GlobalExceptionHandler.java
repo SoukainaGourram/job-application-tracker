@@ -98,9 +98,9 @@ public class GlobalExceptionHandler {
 
     // ── 409 Conflict ─────────────────────────────────────────────────────────
 
-    @ExceptionHandler(EmailAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleEmailConflict(
-            EmailAlreadyExistsException ex, HttpServletRequest request) {
+    @ExceptionHandler({EmailAlreadyExistsException.class, ApplicationConflictException.class})
+    public ResponseEntity<ErrorResponse> handleConflict(
+            RuntimeException ex, HttpServletRequest request) {
 
         ErrorResponse response = ErrorResponse.builder()
                 .timestamp(Instant.now())
