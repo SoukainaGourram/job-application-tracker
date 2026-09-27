@@ -1,0 +1,208 @@
+<div class="detail-container">
+
+  <!-- Back navigation -->
+  <div class="nav-bar">
+    <a routerLink="/applications" class="back-link">
+      ← Retour aux candidatures
+    </a>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="state-container loading-state">
+      <div class="spinner"></div>
+      <p>Chargement des détails de la candidature...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @else if (errorMessage()) {
+    <div class="state-container error-state">
+      <div class="error-icon">⚠️</div>
+      <h3>Candidature introuvable</h3>
+      <p>{{ errorMessage() }}</p>
+      <a routerLink="/applications" class="btn btn-primary">Retour aux candidatures</a>
+    </div>
+  }
+
+  <!-- Application Content -->
+  @else if (application(); as app) {
+    <div class="detail-content">
+
+      <!-- Header Card -->
+      <section class="detail-header-card">
+        <div class="header-main">
+          <div class="badges-row">
+            <span class="badge" [ngClass]="getStatusBadgeClass(app.status)">
+              {{ getStatusLabel(app.status) }}
+            </span>
+            <span class="badge badge-contract">{{ app.offer.contractType }}</span>
+          </div>
+
+          <h1 class="app-title">{{ app.offer.title }}</h1>
+
+          <div class="company-row">
+            <span class="company-name">🏢 {{ app.offer.companyName }}</span>
+            @if (app.offer.city || app.offer.country) {
+              <span class="company-location">📍 {{ app.offer.city }}{{ app.offer.city && app.offer.country ? ', ' : '' }}{{ app.offer.country }}</span>
+            }
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="header-actions">
+          <a [routerLink]="['/applications', app.id, 'edit']" class="btn btn-secondary">
+            ✏️ Modifier
+          </a>
+
+          <button class="btn btn-ghost btn-delete" (click)="promptDelete()">
+            🗑️ Supprimer
+          </button>
+        </div>
+      </section>
+
+      <!-- Main Grid -->
+      <div class="detail-body-grid">
+
+        <!-- Left Column: Application Details & Offer Info -->
+        <div class="main-column">
+
+          <!-- Offer Link & Summary -->
+          <div class="content-card">
+            <div class="card-header-flex">
+              <h2 class="card-title">Offre associée</h2>
+              <a [routerLink]="['/offers', app.offer.id]" class="view-offer-link">
+                Voir l'offre originale ↗
+              </a>
+            </div>
+            @if (app.offer.technologies && app.offer.technologies.length > 0) {
+              <div class="tech-chips">
+                @for (tech of app.offer.technologies; track tech) {
+                  <span class="tech-chip">{{ tech }}</span>
+                }
+              </div>
+            }
+            @if (app.offer.salary) {
+              <p class="meta-inline">💰 Rémunération : <strong>{{ app.offer.salary }}</strong></p>
+            }
+          </div>
+
+          <!-- Notes -->
+          <div class="content-card">
+            <h2 class="card-title">Notes personnelles</h2>
+            @if (app.notes) {
+              <div class="text-block">{{ app.notes }}</div>
+            } @else {
+              <p class="empty-field-text">Aucune note enregistrée pour le moment.</p>
+            }
+          </div>
+
+          <!-- Cover Letter -->
+          <div class="content-card">
+            <h2 class="card-title">Lettre de motivation / Message d'accompagnement</h2>
+            @if (app.coverLetter) {
+              <div class="text-block">{{ app.coverLetter }}</div>
+            } @else {
+              <p class="empty-field-text">Aucune lettre de motivation attachée.</p>
+            }
+          </div>
+
+        </div>
+
+        <!-- Right Column: Metadata & Status History -->
+        <aside class="side-column">
+
+          <!-- Status Selector -->
+          <div class="content-card">
+            <h3 class="card-subtitle">Changer le statut</h3>
+            <select
+              [ngModel]="app.status"
+              (ngModelChange)="onStatusChange($event)"
+              class="status-select-full"
+            >
+              @for (opt of statusOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Key Application Info -->
+          <div class="content-card metadata-card">
+            <h3 class="card-subtitle">Informations candidature</h3>
+            <ul class="meta-list">
+              <li>
+                <span class="meta-label">Date de candidature :</span>
+                <span class="meta-val">{{ app.appliedAt || 'Non renseignée' }}</span>
+              </li>
+              <li>
+                <span class="meta-label">Version du CV :</span>
+                <span class="meta-val">{{ app.cvVersion || 'Non spécifiée' }}</span>
+              </li>
+              <li>
+                <span class="meta-label">Source :</span>
+                <span class="meta-val">{{ app.source || app.offer.source || 'Non spécifiée' }}</span>
+              </li>
+              <li>
+                <span class="meta-label">Créée le :</span>
+                <span class="meta-val">{{ app.createdAt | date:'dd/MM/yyyy' }}</span>
+              </li>
+              <li>
+                <span class="meta-label">Mise à jour :</span>
+                <span class="meta-val">{{ app.updatedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- History Timeline -->
+          <div class="content-card">
+            <h3 class="card-subtitle">Historique des statuts</h3>
+            @if (history().length === 0) {
+              <p class="empty-field-text">Aucun historique enregistré.</p>
+            } @else {
+              <div class="timeline">
+                @for (item of history(); track item.id) {
+                  <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                      <div class="timeline-header">
+                        <span class="badge" [ngClass]="getStatusBadgeClass(item.newStatus)">
+                          {{ getStatusLabel(item.newStatus) }}
+                        </span>
+                        <span class="timeline-date">{{ item.changedAt | date:'dd/MM/yy HH:mm' }}</span>
+                      </div>
+                      @if (item.oldStatus) {
+                        <span class="transition-info">Passé de {{ getStatusLabel(item.oldStatus) }} à {{ getStatusLabel(item.newStatus) }}</span>
+                      }
+                      @if (item.note) {
+                        <p class="timeline-note">{{ item.note }}</p>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+        </aside>
+
+      </div>
+
+      <!-- Delete Confirmation Modal -->
+      @if (showDeleteConfirm()) {
+        <div class="modal-backdrop">
+          <div class="modal-card">
+            <div class="modal-icon">⚠️</div>
+            <h3>Supprimer cette candidature ?</h3>
+            <p>Êtes-vous sûr de vouloir supprimer la candidature pour <strong>"{{ app.offer.title }}"</strong> ? L'historique associé sera également supprimé.</p>
+            <div class="modal-actions">
+              <button class="btn btn-danger" (click)="executeDelete()">Supprimer définitivement</button>
+              <button class="btn btn-secondary" (click)="cancelDelete()">Annuler</button>
+            </div>
+          </div>
+        </div>
+      }
+
+    </div>
+  }
+
+</div>

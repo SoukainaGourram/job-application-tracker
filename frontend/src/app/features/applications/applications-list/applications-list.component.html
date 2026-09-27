@@ -1,0 +1,200 @@
+<div class="apps-container">
+
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">Mes Candidatures</h1>
+      <p class="page-subtitle">Suivez l'avancement de toutes vos candidatures en cours</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/pipeline" class="btn btn-secondary">
+        <span>📊 Vue Pipeline Kanban</span>
+      </a>
+      <a routerLink="/offers" class="btn btn-primary">
+        <span>💼 Voir mes offres</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Filter Bar -->
+  <section class="filter-card">
+    <div class="search-box">
+      <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input
+        type="text"
+        placeholder="Rechercher par offre, mot-clé, notes..."
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+        (keyup.enter)="onFilterChange()"
+        class="search-input"
+      />
+      @if (searchTerm()) {
+        <button class="clear-search-btn" (click)="searchTerm.set(''); onFilterChange()">✕</button>
+      }
+    </div>
+
+    <div class="filters-group">
+      <input
+        type="text"
+        placeholder="Filtrer par entreprise..."
+        [ngModel]="companyFilter()"
+        (ngModelChange)="companyFilter.set($event)"
+        (keyup.enter)="onFilterChange()"
+        class="company-input"
+      />
+
+      <select
+        [ngModel]="selectedStatus()"
+        (ngModelChange)="selectedStatus.set($event); onFilterChange()"
+        class="select-control"
+      >
+        <option value="">Tous les statuts</option>
+        @for (opt of statusOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+
+      @if (searchTerm() || selectedStatus() || companyFilter()) {
+        <button class="btn btn-ghost" (click)="resetFilters()">
+          Réinitialiser
+        </button>
+      }
+    </div>
+  </section>
+
+  <!-- Content States -->
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="state-container loading-state">
+      <div class="spinner"></div>
+      <p>Chargement des candidatures...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @else if (errorMessage()) {
+    <div class="state-container error-state">
+      <div class="error-icon">⚠️</div>
+      <h3>Oups ! Une erreur est survenue</h3>
+      <p>{{ errorMessage() }}</p>
+      <button class="btn btn-primary" (click)="loadApplications()">Réessayer</button>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @else if (applications().length === 0) {
+    <div class="state-container empty-state">
+      <div class="empty-icon">📬</div>
+      <h3>Aucune candidature trouvée</h3>
+      @if (searchTerm() || selectedStatus() || companyFilter()) {
+        <p>Aucune candidature ne correspond à vos filtres.</p>
+        <button class="btn btn-ghost" (click)="resetFilters()">Effacer les filtres</button>
+      } @else {
+        <p>Vous n'avez pas encore de candidature active. Postulez à une offre pour commencer !</p>
+        <a routerLink="/offers" class="btn btn-primary">Parcourir mes offres</a>
+      }
+    </div>
+  }
+
+  <!-- Applications Grid / Cards -->
+  @else {
+    <div class="apps-grid">
+      @for (app of applications(); track app.id) {
+        <div class="app-card">
+
+          <div class="card-header">
+            <span class="badge" [ngClass]="getStatusBadgeClass(app.status)">
+              {{ getStatusLabel(app.status) }}
+            </span>
+            <span class="badge badge-contract">{{ app.contractType }}</span>
+          </div>
+
+          <div class="card-body">
+            <h2 class="app-title">
+              <a [routerLink]="['/applications', app.id]">{{ app.offerTitle }}</a>
+            </h2>
+
+            <div class="app-company">
+              <span class="company-name">🏢 {{ app.companyName }}</span>
+              @if (app.city || app.country) {
+                <span class="company-location">📍 {{ app.city }}{{ app.city && app.country ? ', ' : '' }}{{ app.country }}</span>
+              }
+            </div>
+
+            @if (app.technologies && app.technologies.length > 0) {
+              <div class="tech-tags">
+                @for (tech of app.technologies; track tech) {
+                  <span class="tech-tag">{{ tech }}</span>
+                }
+              </div>
+            }
+
+            <div class="app-meta">
+              @if (app.appliedAt) {
+                <span class="meta-item">📅 Postulé le : {{ app.appliedAt }}</span>
+              }
+              <span class="meta-item">Créée le : {{ app.createdAt | date:'dd/MM/yyyy' }}</span>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <div class="card-actions">
+              <a [routerLink]="['/applications', app.id]" class="btn-icon" title="Voir les détails">
+                👁️
+              </a>
+              <a [routerLink]="['/applications', app.id, 'edit']" class="btn-icon" title="Modifier">
+                ✏️
+              </a>
+              <button class="btn-icon btn-delete" (click)="confirmDelete(app.id)" title="Supprimer">
+                🗑️
+              </button>
+            </div>
+          </div>
+
+          <!-- Delete Confirmation Overlay -->
+          @if (deletingId() === app.id) {
+            <div class="delete-overlay">
+              <p>Supprimer cette candidature ?</p>
+              <div class="overlay-actions">
+                <button class="btn btn-sm btn-danger" (click)="executeDelete(app.id)">Supprimer</button>
+                <button class="btn btn-sm btn-ghost" (click)="cancelDelete()">Annuler</button>
+              </div>
+            </div>
+          }
+
+        </div>
+      }
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages() > 1) {
+      <div class="pagination-bar">
+        <span class="pagination-info">
+          Affichage de {{ applications().length }} sur {{ totalElements() }} candidature(s)
+        </span>
+        <div class="pagination-controls">
+          <button
+            class="btn btn-sm btn-secondary"
+            [disabled]="currentPage() === 0"
+            (click)="goToPage(currentPage() - 1)"
+          >
+            ← Précédent
+          </button>
+          <span class="page-number">Page {{ currentPage() + 1 }} / {{ totalPages() }}</span>
+          <button
+            class="btn btn-sm btn-secondary"
+            [disabled]="currentPage() >= totalPages() - 1"
+            (click)="goToPage(currentPage() + 1)"
+          >
+            Suivant →
+          </button>
+        </div>
+      </div>
+    }
+  }
+
+</div>

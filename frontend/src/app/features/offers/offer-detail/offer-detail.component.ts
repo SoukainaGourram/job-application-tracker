@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { OfferService } from '../../../core/services/offer.service';
+import { ApplicationService } from '../../../core/services/application.service';
 import { Offer, OfferStatus } from '../../../core/models/offer.models';
 
 @Component({
@@ -18,12 +19,14 @@ export class OfferDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private offerService = inject(OfferService);
+  private applicationService = inject(ApplicationService);
 
   offer = signal<Offer | null>(null);
   loading = signal<boolean>(true);
+  applying = signal<boolean>(false);
   errorMessage = signal<string | null>(null);
+  conflictMessage = signal<string | null>(null);
   showDeleteConfirm = signal<boolean>(false);
-  showApplyNotice = signal<boolean>(false);
 
   readonly statusOptions: { value: OfferStatus; label: string }[] = [
     { value: 'SAVED', label: 'Sauvegardée' },
@@ -76,11 +79,30 @@ export class OfferDetailComponent implements OnInit {
   }
 
   onApplyClick(): void {
-    this.showApplyNotice.set(true);
+    const current = this.offer();
+    if (!current || this.applying()) return;
+
+    this.applying.set(true);
+    this.conflictMessage.set(null);
+
+    this.applicationService.createApplicationFromOffer(current.id).pipe(
+      finalize(() => this.applying.set(false))
+    ).subscribe({
+      next: (app) => {
+        this.router.navigate(['/applications', app.id]);
+      },
+      error: (err) => {
+        if (err.status === 409) {
+          this.conflictMessage.set('Une candidature active existe déjà pour cette offre.');
+        } else {
+          alert(err?.error?.message || 'Erreur lors de la création de la candidature.');
+        }
+      },
+    });
   }
 
-  closeApplyNotice(): void {
-    this.showApplyNotice.set(false);
+  closeConflictMessage(): void {
+    this.conflictMessage.set(null);
   }
 
   promptDelete(): void {

@@ -57,8 +57,12 @@
 
         <!-- Action Buttons -->
         <div class="header-actions">
-          <button class="btn btn-apply" (click)="onApplyClick()">
-            <span>🚀 Postuler</span>
+          <button class="btn btn-apply" (click)="onApplyClick()" [disabled]="applying()">
+            @if (applying()) {
+              <span>Création...</span>
+            } @else {
+              <span>🚀 Postuler</span>
+            }
           </button>
 
           <a [routerLink]="['/offers', currentOffer.id, 'edit']" class="btn btn-secondary">
@@ -71,17 +75,17 @@
         </div>
       </section>
 
-      <!-- Apply Notice Banner (Phase 4 explanation) -->
-      @if (showApplyNotice()) {
-        <div class="notice-banner">
+      <!-- Conflict Notice Banner if already applied -->
+      @if (conflictMessage()) {
+        <div class="notice-banner conflict-banner">
           <div class="notice-content">
-            <span class="notice-icon">ℹ️</span>
+            <span class="notice-icon">⚠️</span>
             <div>
-              <strong>Candidature directe bientôt disponible !</strong>
-              <p>Le module de candidature (Application & Pipeline Kanban) sera actif dans la prochaine phase (Phase 4). Vous pourrez transformer cette offre en candidature en 1 clic.</p>
+              <strong>Candidature déjà existante</strong>
+              <p>{{ conflictMessage() }}</p>
             </div>
           </div>
-          <button class="btn-close" (click)="closeApplyNotice()">✕</button>
+          <button class="btn-close" (click)="closeConflictMessage()">✕</button>
         </div>
       }
 

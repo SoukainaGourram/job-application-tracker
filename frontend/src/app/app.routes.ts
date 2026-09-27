@@ -54,17 +54,30 @@ export const routes: Routes = [
           import('./features/offers/offer-form/offer-form.component').then(m => m.OfferFormComponent),
         title: 'Modifier l\'offre — JobTrack',
       },
+      // ── Applications Module (Phase 4) ─────────────────────────────────────
       {
         path: 'applications',
         loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
+          import('./features/applications/applications-list/applications-list.component').then(m => m.ApplicationsListComponent),
         title: 'Candidatures — JobTrack',
+      },
+      {
+        path: 'applications/:id',
+        loadComponent: () =>
+          import('./features/applications/application-detail/application-detail.component').then(m => m.ApplicationDetailComponent),
+        title: 'Détail de la candidature — JobTrack',
+      },
+      {
+        path: 'applications/:id/edit',
+        loadComponent: () =>
+          import('./features/applications/application-form/application-form.component').then(m => m.ApplicationFormComponent),
+        title: 'Modifier la candidature — JobTrack',
       },
       {
         path: 'pipeline',
         loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
-        title: 'Pipeline — JobTrack',
+          import('./features/pipeline/pipeline.component').then(m => m.PipelineComponent),
+        title: 'Pipeline Kanban — JobTrack',
       },
       {
         path: 'interviews',

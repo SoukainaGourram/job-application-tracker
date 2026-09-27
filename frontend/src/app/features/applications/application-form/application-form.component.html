@@ -1,0 +1,98 @@
+<div class="form-page-container">
+
+  <!-- Header -->
+  <header class="form-header">
+    <a [routerLink]="['/applications', appId()]" class="back-link">
+      ← Retour aux détails
+    </a>
+    <h1 class="page-title">Modifier la candidature</h1>
+    @if (application(); as app) {
+      <p class="page-subtitle">
+        {{ app.offer.title }} chez {{ app.offer.companyName }}
+      </p>
+    }
+  </header>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement des données...</p>
+    </div>
+  } @else {
+
+    @if (errorMessage()) {
+      <div class="error-banner">
+        <span>⚠️ {{ errorMessage() }}</span>
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="app-form">
+
+      <div class="form-section">
+        <h2 class="section-title">Informations de soumission</h2>
+
+        <div class="form-row three-cols">
+          <div class="form-group">
+            <label for="appliedAt">Date de candidature</label>
+            <input id="appliedAt" type="date" formControlName="appliedAt" />
+          </div>
+
+          <div class="form-group">
+            <label for="cvVersion">Version du CV utilisée</label>
+            <input id="cvVersion" type="text" formControlName="cvVersion" placeholder="ex. CV_Dev_Fullstack_2026.pdf" />
+          </div>
+
+          <div class="form-group">
+            <label for="source">Canal / Source</label>
+            <input id="source" type="text" formControlName="source" placeholder="ex. LinkedIn, Cooptation..." />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2 class="section-title">Lettre de motivation & Notes</h2>
+
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="notes">Notes personnelles / Suivi</label>
+            <textarea
+              id="notes"
+              formControlName="notes"
+              rows="4"
+              placeholder="Notes sur les échanges, personnes contactées, questions pour l'entretien..."
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="coverLetter">Message d'accompagnement ou lettre de motivation</label>
+            <textarea
+              id="coverLetter"
+              formControlName="coverLetter"
+              rows="6"
+              placeholder="Texte de la lettre de motivation ou message envoyé au recruteur..."
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+          @if (submitting()) {
+            <span class="btn-spinner"></span>
+            <span>Enregistrement...</span>
+          } @else {
+            <span>Enregistrer les modifications</span>
+          }
+        </button>
+
+        <a [routerLink]="['/applications', appId()]" class="btn btn-secondary">
+          Annuler
+        </a>
+      </div>
+
+    </form>
+  }
+
+</div>
