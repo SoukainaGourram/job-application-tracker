@@ -1,0 +1,8 @@
+.mvn/
+*.war
+.git/
+.gitignore
+.idea/
+*.iml
+.vscode/
+*.log

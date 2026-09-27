@@ -107,6 +107,35 @@ L'application Angular sera accessible sur : **`http://localhost:4200`**
 
 ---
 
+## 🐳 Déploiement avec Docker Compose (JobTrack Dédié)
+
+JobTrack possède sa propre infrastructure Docker complètement isolée (réseau bridge `jobtrack-network`, volume `jobtrack_postgres_data`, conteneurs préfixés `jobtrack-*`) sans aucun impact sur les autres conteneurs de votre machine :
+
+### Démarrer l'ensemble des services (PostgreSQL + Backend + Frontend Nginx)
+```bash
+docker compose up --build -d
+```
+
+### Vérifier l'état et la santé des services JobTrack
+```bash
+docker compose ps
+```
+
+### Consulter les logs en temps réel
+```bash
+docker compose logs -f
+# Ou cibler un service spécifique :
+docker compose logs -f backend
+```
+
+### Arrêter les services JobTrack en toute sécurité
+```bash
+docker compose down
+```
+*(Pour réinitialiser également les données de la base JobTrack : `docker compose down -v`)*
+
+---
+
 ## 📡 Endpoints de l'API (Phase 2 — Authentification)
 
 | Méthode | Endpoint | Accès | Description | Code Succès |
