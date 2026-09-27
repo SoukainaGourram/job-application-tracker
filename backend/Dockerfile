@@ -1,6 +1,12 @@
 # ==============================================================================
 # JobTrack Backend — Dockerfile
-# Minimal, secure JRE 21 runtime container
+# Expects the JAR to be pre-built locally with: mvn package -DskipTests
+# The JAR is then copied into a minimal JRE 21 runtime image.
+#
+# Why not multi-stage? Docker Desktop on this machine has no internet access,
+# so Maven cannot download dependencies inside the build container.
+# Build locally first: mvn package -DskipTests
+# Then: docker compose build
 # ==============================================================================
 FROM eclipse-temurin:21-jre-alpine
 
@@ -10,7 +16,7 @@ USER jobtrack:jobtrack
 
 WORKDIR /app
 
-# Copy executable Spring Boot JAR built with Java 21
+# Copy the pre-built Spring Boot executable JAR
 COPY target/*.jar app.jar
 
 EXPOSE 8080

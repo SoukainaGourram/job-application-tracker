@@ -61,7 +61,8 @@ describe('AuthService', () => {
       result = r;
     });
 
-    const req = httpMock.expectOne('http://localhost:8080/api/auth/login');
+    // URL is now relative /api/auth/login (no hardcoded localhost)
+    const req = httpMock.expectOne('/api/auth/login');
     expect(req.request.method).toBe('POST');
     req.flush(MOCK_AUTH_RESPONSE);
 
@@ -79,7 +80,8 @@ describe('AuthService', () => {
       })
       .subscribe();
 
-    const req = httpMock.expectOne('http://localhost:8080/api/auth/register');
+    // URL is now relative /api/auth/register (no hardcoded localhost)
+    const req = httpMock.expectOne('/api/auth/register');
     expect(req.request.method).toBe('POST');
     req.flush(MOCK_AUTH_RESPONSE);
 
@@ -95,5 +97,37 @@ describe('AuthService', () => {
 
   it('isAuthenticated() should be false when no token', () => {
     expect(service.isAuthenticated()).toBe(false);
+  });
+
+  it('loadUserFromToken() should restore user from a valid token on page reload', () => {
+    // Create a mock JWT with valid payload (exp: far future)
+    const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+    const payload = btoa(
+      JSON.stringify({
+        sub: 'reload@example.com',
+        role: 'ROLE_USER',
+        exp: Math.floor(Date.now() / 1000) + 86400, // 24h from now
+      })
+    );
+    const mockToken = `${header}.${payload}.signature`;
+    localStorage.setItem('jt_access_token', mockToken);
+
+    // Re-create service after token is set (simulates page reload)
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([{ path: 'login', component: class {} }]),
+        AuthService,
+        TokenService,
+      ],
+    });
+
+    const freshService = TestBed.inject(AuthService);
+    // User should be restored from token payload
+    expect(freshService.currentUser()).not.toBeNull();
+    expect(freshService.currentUser()?.email).toBe('reload@example.com');
+    expect(freshService.isAuthenticated()).toBe(true);
   });
 });

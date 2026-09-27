@@ -2,9 +2,9 @@ name: JobTrack CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, master, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, master ]
 
 jobs:
   # ── Backend Tests ────────────────────────────────────────────────────────────
@@ -59,22 +59,56 @@ jobs:
         working-directory: frontend
         continue-on-error: true
 
-      - name: Run tests (headless)
-        run: npm run test -- --watch=false --browsers=ChromeHeadless --no-progress
+      - name: Run tests (headless / Vitest)
+        run: npm test -- --watch=false
         working-directory: frontend
 
   # ── Docker Build Check ───────────────────────────────────────────────────────
+  # Note: Dockerfiles use a "pre-build + copy artifact" pattern.
+  # The JAR and Angular dist are compiled first (host Maven/npm),
+  # then copied into minimal runtime images (JRE 21 / Nginx Alpine).
+  # This approach avoids Docker network issues and keeps builds fast in CI.
   docker-build:
     name: Docker — Build Check
     runs-on: ubuntu-latest
     needs: [ backend-tests, frontend-tests ]
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build backend image
+      # ── Backend: compile JAR → build Docker image ─────────────────────────
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build backend JAR
+        run: mvn package -DskipTests --no-transfer-progress
+        working-directory: backend
+
+      # Dockerfile copies the pre-built JAR (target/*.jar) into a JRE 21 image
+      - name: Build backend Docker image
         run: docker build -t jobtrack-backend:ci ./backend
 
-      - name: Build frontend image
+      # ── Frontend: compile Angular dist → build Docker image ───────────────
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Build Angular frontend
+        run: npm run build
+        working-directory: frontend
+
+      # Dockerfile copies the pre-built dist/ folder into an Nginx Alpine image
+      - name: Build frontend Docker image
         run: docker build -t jobtrack-frontend:ci ./frontend

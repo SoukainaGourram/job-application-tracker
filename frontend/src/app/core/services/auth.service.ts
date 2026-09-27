@@ -9,8 +9,11 @@ import {
   RegisterRequest,
   User,
 } from '../models/auth.models';
+import { environment } from '../../../environments/environment.development';
 
-const API_URL = 'http://localhost:8080/api/auth';
+// In production (ng build), environment.development.ts is replaced with environment.ts
+// Both point to the same apiUrl: '/api' — handled by proxy (dev) or Nginx (Docker/prod)
+const API_URL = `${environment.apiUrl}/auth`;
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -51,7 +54,7 @@ export class AuthService {
 
   /**
    * Fetches the current user from the backend.
-   * Use this to refresh user data (e.g., after profile update).
+   * Use this to refresh user data after a page reload or after profile update.
    */
   fetchCurrentUser(): Observable<User> {
     return this.http.get<User>(`${API_URL}/me`).pipe(
@@ -72,21 +75,36 @@ export class AuthService {
 
   /**
    * On service init, try to restore user from existing token.
-   * Returns null if token is missing or expired.
+   * If a valid (non-expired) token is found in localStorage, restore the user
+   * from the token payload to avoid a blank state on page reload (F5).
+   * Full data can be refreshed lazily with fetchCurrentUser() if needed.
    */
   private loadUserFromToken(): User | null {
     if (!this.tokenService.hasToken() || this.tokenService.isExpired()) {
       this.tokenService.removeToken();
       return null;
     }
-    // Decode user info from token payload (non-sensitive fields)
-    const payload = this.tokenService.decodePayload<{
-      sub: string;
-      role: string;
-    }>();
-    if (!payload) return null;
 
-    // Return minimal user from token — full data fetched lazily from /me
-    return null; // Will be populated by fetchCurrentUser() after navigation
+    // Decode the token payload (no signature verification — done server-side)
+    const payload = this.tokenService.decodePayload<{
+      sub: string;     // email
+      role: string;    // e.g. "ROLE_USER"
+      exp: number;
+      iat: number;
+    }>();
+
+    if (!payload?.sub) return null;
+
+    // Reconstruct a minimal User from token claims to avoid any API call on init.
+    // The 'id', 'firstName', 'lastName', 'createdAt' fields are set to defaults
+    // and will be populated as soon as the app calls fetchCurrentUser().
+    return {
+      id: 0,
+      firstName: '',
+      lastName: '',
+      email: payload.sub,
+      role: (payload.role?.replace('ROLE_', '') ?? 'USER') as 'USER' | 'ADMIN',
+      createdAt: '',
+    };
   }
 }
