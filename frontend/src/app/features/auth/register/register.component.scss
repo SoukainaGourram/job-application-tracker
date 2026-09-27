@@ -1,0 +1,57 @@
+@use '../auth-shared' as auth;
+
+:host {
+  display: block;
+  height: 100vh;
+}
+
+.auth-wrapper { @include auth.wrapper; }
+.auth-card { @include auth.card; }
+.auth-brand { @include auth.brand; }
+.brand-logo { @include auth.brand-logo; }
+.brand-name { @include auth.brand-name; }
+.auth-header { @include auth.header; }
+.alert { @include auth.alert; }
+.alert-error { @include auth.alert-error; }
+.form-group { @include auth.form-group; }
+.input-error { @include auth.input-error; }
+.field-error { @include auth.field-error; }
+.btn-primary { @include auth.btn-primary; }
+.spinner { @include auth.spinner; }
+.auth-footer { @include auth.footer; }
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.875rem;
+
+  @media (max-width: 400px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.input-wrapper {
+  position: relative;
+
+  input {
+    padding-right: 2.75rem;
+  }
+}
+
+.toggle-password {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  color: rgba(255,255,255,0.4);
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+
+  svg { width: 18px; height: 18px; }
+  &:hover { color: rgba(255,255,255,0.8); }
+}
