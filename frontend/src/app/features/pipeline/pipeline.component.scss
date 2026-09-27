@@ -1,0 +1,313 @@
+.pipeline-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  height: calc(100vh - 4rem);
+}
+
+.pipeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  .page-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.25rem;
+  }
+
+  .page-subtitle {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+
+  &.btn-primary {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    &:hover { opacity: 0.92; }
+  }
+
+  &.btn-secondary {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    &:hover { background: rgba(255, 255, 255, 0.14); }
+  }
+}
+
+// ─── Kanban Board ─────────────────────────────────────────────────────────────
+
+.kanban-board {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  flex: 1;
+  align-items: stretch;
+
+  /* Custom scrollbar for Kanban */
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+  }
+}
+
+.kanban-column {
+  width: 300px;
+  min-width: 300px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  gap: 0.875rem;
+
+  &.col-to-apply .column-indicator { background: #f59e0b; }
+  &.col-applied .column-indicator { background: #3b82f6; }
+  &.col-screening .column-indicator { background: #8b5cf6; }
+  &.col-interview .column-indicator { background: #06b6d4; }
+  &.col-offer .column-indicator { background: #10b981; }
+  &.col-accepted .column-indicator { background: #22c55e; }
+  &.col-rejected .column-indicator { background: #ef4444; }
+  &.col-withdrawn .column-indicator { background: #6b7280; }
+}
+
+.column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+  .column-title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .column-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .column-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #fff;
+    }
+  }
+
+  .column-count {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.06);
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+  }
+}
+
+.cards-drop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 150px;
+  padding: 0.25rem;
+}
+
+// ─── Kanban Card ──────────────────────────────────────────────────────────────
+
+.kanban-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.625rem;
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  cursor: grab;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+
+  &:hover {
+    border-color: rgba(99, 102, 241, 0.35);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+
+    .card-company {
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.85);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 170px;
+    }
+
+    .badge-contract {
+      font-size: 0.7rem;
+      padding: 0.1rem 0.4rem;
+      border-radius: 0.25rem;
+      background: rgba(255, 255, 255, 0.06);
+      color: rgba(255, 255, 255, 0.6);
+    }
+  }
+
+  .card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.3;
+
+    a {
+      color: #fff;
+      text-decoration: none;
+      &:hover { color: #a5b4fc; }
+    }
+  }
+
+  .card-location {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  .tech-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+
+    .tech-tag {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 0.25rem;
+      padding: 0.1rem 0.35rem;
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.6);
+
+      &.more {
+        color: #a5b4fc;
+      }
+    }
+  }
+
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.4);
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    padding-top: 0.375rem;
+    margin-top: 0.25rem;
+
+    .detail-link {
+      color: #a5b4fc;
+      text-decoration: none;
+      font-weight: bold;
+      &:hover { text-decoration: underline; }
+    }
+  }
+}
+
+.empty-column-placeholder {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 0.5rem;
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 0.8rem;
+  min-height: 100px;
+}
+
+// ─── CDK Drag & Drop Styles ───────────────────────────────────────────────────
+
+.cdk-drag-preview {
+  box-sizing: border-box;
+  border-radius: 0.625rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  background: #1e1e38;
+  border: 1px solid #6366f1;
+  padding: 0.875rem;
+  color: #fff;
+  opacity: 0.95;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.3;
+  border: 2px dashed #6366f1;
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.cdk-drag-animating {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.cards-drop-list.cdk-drop-list-dragging .kanban-card:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.state-container {
+  padding: 4rem 2rem;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+
+  h3 { color: #fff; }
+  p { color: rgba(255, 255, 255, 0.5); }
+  .error-icon { font-size: 3rem; }
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

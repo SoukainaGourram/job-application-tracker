@@ -1,0 +1,117 @@
+<div class="pipeline-page">
+
+  <!-- Header -->
+  <header class="pipeline-header">
+    <div class="header-left">
+      <h1 class="page-title">Pipeline de Recrutement</h1>
+      <p class="page-subtitle">Glissez-déposez vos candidatures à travers les étapes de votre processus</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/applications" class="btn btn-secondary">
+        <span>📋 Vue Liste</span>
+      </a>
+      <a routerLink="/offers" class="btn btn-primary">
+        <span>💼 Voir mes offres</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="state-container loading-state">
+      <div class="spinner"></div>
+      <p>Chargement du pipeline Kanban...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @else if (errorMessage()) {
+    <div class="state-container error-state">
+      <div class="error-icon">⚠️</div>
+      <h3>Oups ! Une erreur est survenue</h3>
+      <p>{{ errorMessage() }}</p>
+      <button class="btn btn-primary" (click)="loadKanbanData()">Réessayer</button>
+    </div>
+  }
+
+  <!-- Kanban Board -->
+  @else {
+    <div class="kanban-board" cdkDropListGroup>
+
+      @for (col of columns(); track col.id) {
+        <div class="kanban-column" [ngClass]="col.colorClass">
+
+          <!-- Column Header -->
+          <div class="column-header">
+            <div class="column-title-group">
+              <span class="column-indicator"></span>
+              <h2 class="column-title">{{ col.title }}</h2>
+            </div>
+            <span class="column-count">{{ col.items.length }}</span>
+          </div>
+
+          <!-- Cards Drop List -->
+          <div
+            [id]="'drop-list-' + col.id"
+            cdkDropList
+            [cdkDropListData]="col.items"
+            [cdkDropListConnectedTo]="connectedDropLists"
+            (cdkDropListDropped)="onDrop($event, col)"
+            class="cards-drop-list"
+          >
+            @for (app of col.items; track app.id) {
+              <div cdkDrag class="kanban-card">
+
+                <div class="card-top">
+                  <span class="card-company">🏢 {{ app.companyName }}</span>
+                  <span class="card-contract badge-contract">{{ app.contractType }}</span>
+                </div>
+
+                <h3 class="card-title">
+                  <a [routerLink]="['/applications', app.id]">{{ app.offerTitle }}</a>
+                </h3>
+
+                @if (app.city || app.country) {
+                  <span class="card-location">📍 {{ app.city }}{{ app.city && app.country ? ', ' : '' }}{{ app.country }}</span>
+                }
+
+                @if (app.technologies && app.technologies.length > 0) {
+                  <div class="tech-tags">
+                    @for (tech of app.technologies.slice(0, 3); track tech) {
+                      <span class="tech-tag">{{ tech }}</span>
+                    }
+                    @if (app.technologies.length > 3) {
+                      <span class="tech-tag more">+{{ app.technologies.length - 3 }}</span>
+                    }
+                  </div>
+                }
+
+                <div class="card-footer">
+                  @if (app.appliedAt) {
+                    <span class="applied-date">📅 {{ app.appliedAt }}</span>
+                  } @else {
+                    <span class="created-date">{{ app.createdAt | date:'dd/MM' }}</span>
+                  }
+                  <a [routerLink]="['/applications', app.id]" class="detail-link" title="Détails">
+                    ↗
+                  </a>
+                </div>
+
+              </div>
+            }
+
+            @if (col.items.length === 0) {
+              <div class="empty-column-placeholder">
+                <span>Déposer ici</span>
+              </div>
+            }
+
+          </div>
+
+        </div>
+      }
+
+    </div>
+  }
+
+</div>
