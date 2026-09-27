@@ -68,6 +68,9 @@ class OfferControllerTest {
     @MockBean
     private UserDetailsService userDetailsService;
 
+    @MockBean
+    private com.jobtrack.service.ApplicationService applicationService;
+
     private User authUser;
     private OfferResponse sampleOfferResponse;
 
@@ -299,5 +302,24 @@ class OfferControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"url\":\"https://example.com/job\"}"))
                 .andExpect(status().isNotImplemented());
+    }
+
+    @Test
+    @DisplayName("POST /api/offers/{offerId}/applications — création candidature depuis offre → 201 Created")
+    void createApplicationFromOffer_returns201() throws Exception {
+        com.jobtrack.dto.response.ApplicationResponse appResponse = com.jobtrack.dto.response.ApplicationResponse.builder()
+                .id(50L)
+                .status(com.jobtrack.entity.ApplicationStatus.TO_APPLY)
+                .build();
+
+        when(applicationService.createApplicationFromOffer(eq(100L), any(User.class)))
+                .thenReturn(appResponse);
+
+        mockMvc.perform(post("/api/offers/100/applications")
+                        .with(user(authUser))
+                        .with(csrf()))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(50))
+                .andExpect(jsonPath("$.status").value("TO_APPLY"));
     }
 }

@@ -5,6 +5,8 @@ import { of } from 'rxjs';
 import { ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { Offer } from '../../../core/models/offer.models';
 
+import { ApplicationService } from '../../../core/services/application.service';
+
 const MOCK_OFFER: Offer = {
   id: 10,
   title: 'Java Cloud Architect',
@@ -24,6 +26,7 @@ describe('OfferDetailComponent', () => {
   let component: OfferDetailComponent;
   let fixture: ComponentFixture<OfferDetailComponent>;
   let offerServiceMock: any;
+  let applicationServiceMock: any;
   let router: Router;
 
   beforeEach(async () => {
@@ -33,13 +36,19 @@ describe('OfferDetailComponent', () => {
       deleteOffer: vi.fn().mockReturnValue(of(undefined)),
     };
 
+    applicationServiceMock = {
+      createApplicationFromOffer: vi.fn().mockReturnValue(of({ id: 55, status: 'TO_APPLY' })),
+    };
+
     await TestBed.configureTestingModule({
       imports: [OfferDetailComponent],
       providers: [
         { provide: OfferService, useValue: offerServiceMock },
+        { provide: ApplicationService, useValue: applicationServiceMock },
         provideRouter([
           { path: 'offers', component: class {} },
           { path: 'offers/:id', component: class {} },
+          { path: 'applications/:id', component: class {} },
         ]),
         {
           provide: ActivatedRoute,
@@ -74,12 +83,10 @@ describe('OfferDetailComponent', () => {
     expect(component.offer()?.status).toBe('TO_APPLY');
   });
 
-  it('should show notice on apply button click (Phase 4 explanation)', () => {
-    expect(component.showApplyNotice()).toBe(false);
+  it('should create application on apply button click and navigate to application detail', () => {
     component.onApplyClick();
-    expect(component.showApplyNotice()).toBe(true);
-    component.closeApplyNotice();
-    expect(component.showApplyNotice()).toBe(false);
+    expect(applicationServiceMock.createApplicationFromOffer).toHaveBeenCalledWith(10);
+    expect(router.navigate).toHaveBeenCalledWith(['/applications', 55]);
   });
 
   it('should handle delete confirmation and navigation', () => {
