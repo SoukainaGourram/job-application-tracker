@@ -1,0 +1,251 @@
+<div class="company-detail-container">
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement des détails de l'entreprise...</p>
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="alert alert-error" role="alert">
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+
+  @if (!loading() && company(); as comp) {
+    <!-- Breadcrumb & Top Actions -->
+    <div class="top-nav">
+      <a routerLink="/companies" class="back-link">
+        ← Retour aux entreprises
+      </a>
+      <div class="action-buttons">
+        <a [routerLink]="['/companies', comp.id, 'edit']" class="btn btn-secondary">
+          ✏️ Modifier
+        </a>
+        <button class="btn btn-danger" (click)="showDeleteModal.set(true)">
+          🗑️ Supprimer
+        </button>
+      </div>
+    </div>
+
+    <!-- Company Overview Card -->
+    <div class="overview-card">
+      <div class="overview-header">
+        <div class="avatar-large">
+          {{ comp.name.charAt(0).toUpperCase() }}
+        </div>
+        <div class="overview-main">
+          <div class="title-row">
+            <h1 class="company-name">{{ comp.name }}</h1>
+            @if (comp.size) {
+              <span class="badge-size">{{ comp.size }}</span>
+            }
+          </div>
+
+          <div class="meta-row">
+            @if (comp.location) {
+              <span class="meta-item">📍 {{ comp.location }}</span>
+            }
+            @if (comp.industry) {
+              <span class="meta-item">🏷️ {{ comp.industry }}</span>
+            }
+            @if (comp.website) {
+              <a [href]="comp.website" target="_blank" rel="noopener noreferrer" class="meta-item link-item">
+                🌐 {{ comp.website }}
+              </a>
+            }
+          </div>
+        </div>
+
+        <div class="metric-box">
+          <span class="metric-number">{{ comp.offersCount }}</span>
+          <span class="metric-text">Offre(s) liée(s)</span>
+        </div>
+      </div>
+
+      <!-- Description & Notes -->
+      @if (comp.description || comp.notes) {
+        <div class="overview-details">
+          @if (comp.description) {
+            <div class="detail-block">
+              <h3>Description de l'entreprise</h3>
+              <p>{{ comp.description }}</p>
+            </div>
+          }
+          @if (comp.notes) {
+            <div class="detail-block notes-block">
+              <h3>Notes privées (Recrutement)</h3>
+              <p>{{ comp.notes }}</p>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Section Contacts CRM -->
+    <div class="contacts-section">
+      <div class="section-header">
+        <div>
+          <h2>Contacts & Recruteurs ({{ comp.contacts.length }})</h2>
+          <p class="section-subtitle">Personnes clés identifiées dans cette entreprise</p>
+        </div>
+        <button class="btn btn-primary" (click)="openAddContactModal()" id="btn-add-contact">
+          + Ajouter un contact
+        </button>
+      </div>
+
+      @if (comp.contacts.length === 0) {
+        <div class="empty-contacts">
+          <p>Aucun contact enregistré pour cette entreprise.</p>
+          <button class="btn btn-secondary btn-sm" (click)="openAddContactModal()">
+            Ajouter un premier contact
+          </button>
+        </div>
+      } @else {
+        <div class="contacts-grid">
+          @for (contact of comp.contacts; track contact.id) {
+            <div class="contact-card">
+              <div class="contact-header">
+                <div class="contact-info">
+                  <h4 class="contact-name">{{ contact.firstName }} {{ contact.lastName }}</h4>
+                  @if (contact.jobTitle) {
+                    <span class="contact-role">💼 {{ contact.jobTitle }}</span>
+                  }
+                </div>
+                <div class="contact-actions">
+                  <button class="btn-icon" (click)="openEditContactModal(contact)" title="Modifier">
+                    ✏️
+                  </button>
+                  <button class="btn-icon btn-delete" (click)="deleteContact(contact.id)" title="Supprimer">
+                    🗑️
+                  </button>
+                </div>
+              </div>
+
+              <div class="contact-links">
+                @if (contact.email) {
+                  <a [href]="'mailto:' + contact.email" class="contact-link">
+                    ✉️ {{ contact.email }}
+                  </a>
+                }
+                @if (contact.phone) {
+                  <a [href]="'tel:' + contact.phone" class="contact-link">
+                    📞 {{ contact.phone }}
+                  </a>
+                }
+                @if (contact.linkedinUrl) {
+                  <a [href]="contact.linkedinUrl" target="_blank" rel="noopener noreferrer" class="contact-link">
+                    🔗 LinkedIn
+                  </a>
+                }
+              </div>
+
+              @if (contact.notes) {
+                <div class="contact-notes">
+                  <p>{{ contact.notes }}</p>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Quick Navigation to Offers -->
+    <div class="navigation-actions">
+      <a [routerLink]="['/offers/new']" class="btn btn-secondary">
+        + Créer une offre pour cette entreprise
+      </a>
+      <a routerLink="/offers" class="btn btn-secondary">
+        Voir mes offres
+      </a>
+    </div>
+
+    <!-- Modal Delete Company -->
+    @if (showDeleteModal()) {
+      <div class="modal-backdrop">
+        <div class="modal-card">
+          <h3>Supprimer l'entreprise {{ comp.name }} ?</h3>
+          <p>
+            Cette action est irréversible. Les contacts associés seront supprimés.
+          </p>
+          <div class="alert-info-box">
+            🛡️ <strong>Sécurité des données :</strong> Vos offres associées et vos candidatures ne seront <strong>PAS</strong> supprimées. Leur référence d'entreprise deviendra simplement non renseignée.
+          </div>
+          <div class="modal-buttons">
+            <button class="btn btn-danger" (click)="deleteCompany()">Confirmer la suppression</button>
+            <button class="btn btn-secondary" (click)="showDeleteModal.set(false)">Annuler</button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Modal Contact (Add/Edit) -->
+    @if (showContactModal()) {
+      <div class="modal-backdrop">
+        <div class="modal-card modal-lg">
+          <div class="modal-header">
+            <h3>{{ editingContactId() ? 'Modifier le contact' : 'Ajouter un contact recruteur' }}</h3>
+            <button class="close-btn" (click)="closeContactModal()">✕</button>
+          </div>
+
+          @if (contactErrorMessage()) {
+            <div class="alert alert-error">
+              <span>{{ contactErrorMessage() }}</span>
+            </div>
+          }
+
+          <form [formGroup]="contactForm" (ngSubmit)="saveContact()" class="contact-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="contact-first-name">Prénom *</label>
+                <input id="contact-first-name" type="text" formControlName="firstName" placeholder="ex: Sophie" class="form-input" />
+              </div>
+              <div class="form-group">
+                <label for="contact-last-name">Nom *</label>
+                <input id="contact-last-name" type="text" formControlName="lastName" placeholder="ex: Dubois" class="form-input" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="contact-job-title">Poste / Rôle</label>
+              <input id="contact-job-title" type="text" formControlName="jobTitle" placeholder="ex: Responsable Recrutement Tech" class="form-input" />
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="contact-email">Email</label>
+                <input id="contact-email" type="email" formControlName="email" placeholder="sophie.dubois@entreprise.com" class="form-input" />
+              </div>
+              <div class="form-group">
+                <label for="contact-phone">Téléphone</label>
+                <input id="contact-phone" type="text" formControlName="phone" placeholder="+33 6 12 34 56 78" class="form-input" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="contact-linkedin">Profil LinkedIn</label>
+              <input id="contact-linkedin" type="url" formControlName="linkedinUrl" placeholder="https://linkedin.com/in/..." class="form-input" />
+            </div>
+
+            <div class="form-group">
+              <label for="contact-notes">Notes sur le contact</label>
+              <textarea id="contact-notes" formControlName="notes" rows="3" placeholder="Échange sur LinkedIn le 12/03, intéressée par mon profil..." class="form-input"></textarea>
+            </div>
+
+            <div class="modal-buttons">
+              <button type="submit" class="btn btn-primary" [disabled]="contactFormSubmitting()">
+                {{ editingContactId() ? 'Enregistrer les modifications' : 'Ajouter le contact' }}
+              </button>
+              <button type="button" class="btn btn-secondary" (click)="closeContactModal()">
+                Annuler
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+  }
+
+</div>

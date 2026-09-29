@@ -1,0 +1,143 @@
+<div class="company-form-container">
+
+  <div class="form-header">
+    <a routerLink="/companies" class="back-link">
+      ← Retour aux entreprises
+    </a>
+    <h1 class="page-title">
+      {{ isEditMode() ? 'Modifier l\'entreprise' : 'Nouvelle entreprise' }}
+    </h1>
+    <p class="page-subtitle">
+      {{ isEditMode() ? 'Mettez à jour les informations et notes de recrutement' : 'Enregistrez une entreprise cible pour vos candidatures' }}
+    </p>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert alert-error" role="alert">
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement des données...</p>
+    </div>
+  } @else {
+    <form [formGroup]="companyForm" (ngSubmit)="onSubmit()" class="company-card-form">
+
+      <!-- Nom & Site web -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="name">Nom de l'entreprise *</label>
+          <input
+            id="name"
+            type="text"
+            formControlName="name"
+            placeholder="ex: Google, Doctolib, Société Générale"
+            class="form-input"
+            [class.input-error]="companyForm.get('name')?.invalid && companyForm.get('name')?.touched"
+          />
+          @if (companyForm.get('name')?.hasError('required') && companyForm.get('name')?.touched) {
+            <span class="field-error">Le nom est obligatoire.</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="website">Site web (optionnel)</label>
+          <input
+            id="website"
+            type="url"
+            formControlName="website"
+            placeholder="https://entreprise.com"
+            class="form-input"
+            [class.input-error]="companyForm.get('website')?.invalid && companyForm.get('website')?.touched"
+          />
+          @if (companyForm.get('website')?.hasError('pattern') && companyForm.get('website')?.touched) {
+            <span class="field-error">Veuillez saisir une URL valide commençant par http:// ou https://</span>
+          }
+        </div>
+      </div>
+
+      <!-- Secteur, Localisation & Taille -->
+      <div class="form-row three-cols">
+        <div class="form-group">
+          <label for="industry">Secteur d'activité</label>
+          <input
+            id="industry"
+            type="text"
+            formControlName="industry"
+            placeholder="ex: Fintech, Santé, E-commerce"
+            class="form-input"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="location">Localisation / Siège</label>
+          <input
+            id="location"
+            type="text"
+            formControlName="location"
+            placeholder="ex: Paris, Lyon, Full Remote"
+            class="form-input"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="size">Taille de l'entreprise</label>
+          <select id="size" formControlName="size" class="form-input form-select">
+            <option value="">Sélectionner une taille</option>
+            @for (opt of sizeOptions; track opt) {
+              <option [value]="opt">{{ opt }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label for="description">Description & Présentation</label>
+        <textarea
+          id="description"
+          formControlName="description"
+          rows="4"
+          placeholder="Activités principales, technologies phares, culture d'entreprise..."
+          class="form-input"
+        ></textarea>
+      </div>
+
+      <!-- Notes privées de candidature -->
+      <div class="form-group">
+        <label for="notes">Notes privées / Stratégie de recrutement</label>
+        <textarea
+          id="notes"
+          formControlName="notes"
+          rows="3"
+          placeholder="Points forts pour postuler, contacts clés, relances à prévoir..."
+          class="form-input"
+        ></textarea>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="submitting() || companyForm.invalid"
+          id="btn-save-company"
+        >
+          @if (submitting()) {
+            <span class="spinner-sm"></span> Enregistrement...
+          } @else {
+            {{ isEditMode() ? 'Mettre à jour l\'entreprise' : 'Créer l\'entreprise' }}
+          }
+        </button>
+        <a routerLink="/companies" class="btn btn-secondary">
+          Annuler
+        </a>
+      </div>
+
+    </form>
+  }
+
+</div>

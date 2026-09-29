@@ -85,11 +85,30 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
         title: 'Entretiens — JobTrack',
       },
+      // ── Companies Module (Phase 5) ──────────────────────────────────────────
       {
         path: 'companies',
         loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
+          import('./features/companies/companies-list/companies-list.component').then(m => m.CompaniesListComponent),
         title: 'Entreprises — JobTrack',
+      },
+      {
+        path: 'companies/new',
+        loadComponent: () =>
+          import('./features/companies/company-form/company-form.component').then(m => m.CompanyFormComponent),
+        title: 'Ajouter une entreprise — JobTrack',
+      },
+      {
+        path: 'companies/:id',
+        loadComponent: () =>
+          import('./features/companies/company-detail/company-detail.component').then(m => m.CompanyDetailComponent),
+        title: 'Détail de l\'entreprise — JobTrack',
+      },
+      {
+        path: 'companies/:id/edit',
+        loadComponent: () =>
+          import('./features/companies/company-form/company-form.component').then(m => m.CompanyFormComponent),
+        title: 'Modifier l\'entreprise — JobTrack',
       },
       {
         path: 'notifications',
