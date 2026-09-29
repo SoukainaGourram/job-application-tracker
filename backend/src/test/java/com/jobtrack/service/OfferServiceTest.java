@@ -260,4 +260,79 @@ class OfferServiceTest {
 
         verify(offerRepository, never()).delete(any(Offer.class));
     }
+
+    @Test
+    @DisplayName("createOffer — association avec Company du même utilisateur : succès")
+    void createOffer_withOwnedCompany_associatesCompany() {
+        com.jobtrack.entity.Company company = com.jobtrack.entity.Company.builder()
+                .id(100L)
+                .user(userA)
+                .name("Acme Corp")
+                .build();
+
+        OfferCreateRequest request = OfferCreateRequest.builder()
+                .title("Java Developer")
+                .companyName("Acme Corp")
+                .companyId(100L)
+                .contractType(ContractType.CDI)
+                .build();
+
+        Offer unmapped = Offer.builder()
+                .title("Java Developer")
+                .companyName("Acme Corp")
+                .contractType(ContractType.CDI)
+                .build();
+
+        when(offerMapper.toEntity(request)).thenReturn(unmapped);
+        when(companyRepository.findByIdAndUserId(100L, 1L)).thenReturn(Optional.of(company));
+        when(offerRepository.save(unmapped)).thenReturn(unmapped);
+        when(offerMapper.toResponse(unmapped)).thenReturn(OfferResponse.builder().id(12L).build());
+
+        OfferResponse result = offerService.createOffer(request, userA);
+
+        assertThat(result).isNotNull();
+        assertThat(unmapped.getCompany()).isEqualTo(company);
+        verify(companyRepository).findByIdAndUserId(100L, 1L);
+    }
+
+    @Test
+    @DisplayName("createOffer — tentative d'associer une Company d'un autre utilisateur : lève ResourceNotFoundException")
+    void createOffer_withCrossUserCompany_throwsResourceNotFound() {
+        OfferCreateRequest request = OfferCreateRequest.builder()
+                .title("Java Developer")
+                .companyName("Hacked Corp")
+                .companyId(999L)
+                .contractType(ContractType.CDI)
+                .build();
+
+        Offer unmapped = Offer.builder().title("Java Developer").build();
+        when(offerMapper.toEntity(request)).thenReturn(unmapped);
+        when(companyRepository.findByIdAndUserId(999L, 1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> offerService.createOffer(request, userA))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Company not found with id: 999");
+
+        verify(offerRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("updateOffer — tentative d'associer une Company d'un autre utilisateur : lève ResourceNotFoundException")
+    void updateOffer_withCrossUserCompany_throwsResourceNotFound() {
+        OfferUpdateRequest request = OfferUpdateRequest.builder()
+                .title("Updated Title")
+                .companyName("Hacked Corp")
+                .companyId(999L)
+                .contractType(ContractType.CDI)
+                .build();
+
+        when(offerRepository.findByIdAndUserId(10L, 1L)).thenReturn(Optional.of(offerA));
+        when(companyRepository.findByIdAndUserId(999L, 1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> offerService.updateOffer(10L, request, userA))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Company not found with id: 999");
+
+        verify(offerRepository, never()).save(any());
+    }
 }

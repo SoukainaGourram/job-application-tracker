@@ -7,13 +7,10 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
-@Table(name = "companies", indexes = {
-        @Index(name = "idx_company_user_id", columnList = "user_id"),
-        @Index(name = "idx_company_user_name", columnList = "user_id, name")
+@Table(name = "company_contacts", indexes = {
+        @Index(name = "idx_contact_company_id", columnList = "company_id")
 })
 @EntityListeners(AuditingEntityListener.class)
 @Getter
@@ -21,40 +18,36 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Company {
+public class CompanyContact {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
 
-    @Column(nullable = false, length = 150)
-    private String name;
+    @Column(name = "first_name", nullable = false, length = 100)
+    private String firstName;
+
+    @Column(name = "last_name", nullable = false, length = 100)
+    private String lastName;
+
+    @Column(name = "job_title", length = 150)
+    private String jobTitle;
 
     @Column(length = 255)
-    private String website;
-
-    @Column(length = 100)
-    private String industry;
-
-    @Column(length = 150)
-    private String location;
+    private String email;
 
     @Column(length = 50)
-    private String size;
+    private String phone;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
+    @Column(name = "linkedin_url", length = 500)
+    private String linkedinUrl;
 
     @Column(columnDefinition = "TEXT")
     private String notes;
-
-    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<CompanyContact> contacts = new ArrayList<>();
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)

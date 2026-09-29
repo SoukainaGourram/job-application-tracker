@@ -63,10 +63,11 @@ public class OfferService {
         Offer offer = offerMapper.toEntity(request);
         offer.setUser(user);
 
-        // Optional company association
+        // Optional company association with strict user isolation
         if (request.getCompanyId() != null) {
-            companyRepository.findById(request.getCompanyId())
-                    .ifPresent(offer::setCompany);
+            Company company = companyRepository.findByIdAndUserId(request.getCompanyId(), user.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Company", request.getCompanyId()));
+            offer.setCompany(company);
         }
 
         if (offer.getStatus() == null) {
@@ -86,8 +87,9 @@ public class OfferService {
         offerMapper.updateEntityFromRequest(request, offer);
 
         if (request.getCompanyId() != null) {
-            companyRepository.findById(request.getCompanyId())
-                    .ifPresent(offer::setCompany);
+            Company company = companyRepository.findByIdAndUserId(request.getCompanyId(), user.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Company", request.getCompanyId()));
+            offer.setCompany(company);
         }
 
         Offer updated = offerRepository.save(offer);

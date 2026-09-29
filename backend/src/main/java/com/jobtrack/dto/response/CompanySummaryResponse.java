@@ -6,14 +6,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CompanyResponse {
+public class CompanySummaryResponse {
 
     private Long id;
     private String name;
@@ -21,17 +19,7 @@ public class CompanyResponse {
     private String industry;
     private String location;
     private String size;
-    private String description;
-    private String notes;
-    private String city;
-    private String country;
-
-    @Builder.Default
-    private List<CompanyContactResponse> contacts = new ArrayList<>();
-
-    @Builder.Default
-    private long offersCount = 0;
-
+    private long offersCount;
+    private long contactsCount;
     private Instant createdAt;
-    private Instant updatedAt;
 }
