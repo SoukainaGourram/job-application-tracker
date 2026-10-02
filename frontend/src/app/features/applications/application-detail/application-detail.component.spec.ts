@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ApplicationDetailComponent } from './application-detail.component';
 import { ApplicationService } from '../../../core/services/application.service';
+import { InterviewService } from '../../../core/services/interview.service';
 import { of } from 'rxjs';
 import { ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { Application, ApplicationHistory } from '../../../core/models/application.models';
@@ -47,10 +48,15 @@ describe('ApplicationDetailComponent', () => {
       deleteApplication: vi.fn().mockReturnValue(of(undefined)),
     };
 
+    const interviewServiceMock = {
+      getInterviews: vi.fn().mockReturnValue(of([])),
+    };
+
     await TestBed.configureTestingModule({
       imports: [ApplicationDetailComponent],
       providers: [
         { provide: ApplicationService, useValue: applicationServiceMock },
+        { provide: InterviewService, useValue: interviewServiceMock },
         provideRouter([
           { path: 'applications', component: class {} },
           { path: 'applications/:id', component: class {} },

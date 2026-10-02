@@ -1,0 +1,202 @@
+<section class="interviews-section">
+
+  <div class="section-header">
+    <div>
+      <h2 class="section-title">Entretiens</h2>
+      <p class="section-subtitle">Planifiez et suivez les entretiens pour cette candidature</p>
+    </div>
+    @if (!showForm()) {
+      <button type="button" class="btn btn-primary" (click)="openCreateForm()">
+        + Planifier un entretien
+      </button>
+    }
+  </div>
+
+  @if (statusChangeError()) {
+    <div class="inline-alert error" role="alert">
+      {{ statusChangeError() }}
+      <button type="button" class="alert-dismiss" (click)="statusChangeError.set(null)">✕</button>
+    </div>
+  }
+
+  @if (deleteError()) {
+    <div class="inline-alert error" role="alert">
+      {{ deleteError() }}
+      <button type="button" class="alert-dismiss" (click)="deleteError.set(null)">✕</button>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="state-box loading">
+      <div class="spinner"></div>
+      <p>Chargement des entretiens…</p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="state-box error">
+      <p>{{ errorMessage() }}</p>
+      <button type="button" class="btn btn-secondary" (click)="loadInterviews()">Réessayer</button>
+    </div>
+  } @else {
+
+    @if (showForm()) {
+      <div class="form-card">
+        <h3 class="form-title">{{ isEditing() ? 'Modifier l\'entretien' : 'Nouvel entretien' }}</h3>
+
+        @if (formError()) {
+          <div class="inline-alert error">{{ formError() }}</div>
+        }
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="interview-form">
+          <div class="form-grid">
+            <div class="field">
+              <label for="interview-type">Type *</label>
+              <select id="interview-type" formControlName="type" class="control">
+                <option value="" disabled>Sélectionner…</option>
+                @for (opt of typeOptions; track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+              @if (form.get('type')?.invalid && form.get('type')?.touched) {
+                <span class="field-error">Le type est obligatoire.</span>
+              }
+            </div>
+
+            <div class="field">
+              <label for="interview-scheduled">Date et heure *</label>
+              <input id="interview-scheduled" type="datetime-local" formControlName="scheduledAt" class="control" />
+              @if (form.get('scheduledAt')?.invalid && form.get('scheduledAt')?.touched) {
+                <span class="field-error">La date est obligatoire.</span>
+              }
+            </div>
+
+            <div class="field">
+              <label for="interview-ended">Fin (optionnel)</label>
+              <input id="interview-ended" type="datetime-local" formControlName="endedAt" class="control" />
+            </div>
+
+            <div class="field">
+              <label for="interview-location">Lieu / lien</label>
+              <input id="interview-location" type="text" formControlName="location" class="control" placeholder="Visio, adresse…" />
+            </div>
+
+            <div class="field">
+              <label for="interview-interviewer">Interlocuteur</label>
+              <input id="interview-interviewer" type="text" formControlName="interviewerName" class="control" />
+            </div>
+
+            <div class="field field-full">
+              <label for="interview-notes">Notes</label>
+              <textarea id="interview-notes" formControlName="notes" class="control textarea" rows="3"></textarea>
+            </div>
+
+            @if (isEditing()) {
+              <div class="field field-full">
+                <label for="interview-feedback">Retour / feedback</label>
+                <textarea id="interview-feedback" formControlName="feedback" class="control textarea" rows="3"></textarea>
+              </div>
+            }
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" [disabled]="form.invalid || formSubmitting()">
+              @if (formSubmitting()) {
+                Enregistrement…
+              } @else {
+                {{ isEditing() ? 'Enregistrer' : 'Créer l\'entretien' }}
+              }
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="closeForm()" [disabled]="formSubmitting()">
+              Annuler
+            </button>
+          </div>
+        </form>
+      </div>
+    }
+
+    @if (interviews().length === 0 && !showForm()) {
+      <div class="state-box empty">
+        <p>Aucun entretien planifié pour le moment.</p>
+        <button type="button" class="btn btn-secondary" (click)="openCreateForm()">Planifier le premier entretien</button>
+      </div>
+    } @else if (interviews().length > 0) {
+      <ul class="interview-list">
+        @for (interview of interviews(); track interview.id) {
+          <li class="interview-card">
+            <div class="card-main">
+              <div class="card-top">
+                <span class="type-pill" [ngClass]="getTypeClass(interview.type)">
+                  {{ getTypeLabel(interview.type) }}
+                </span>
+                <span class="status-badge" [ngClass]="getStatusClass(interview.status)">
+                  {{ getStatusLabel(interview.status) }}
+                </span>
+              </div>
+
+              <p class="schedule-line">
+                📅 {{ interview.scheduledAt | date:'dd/MM/yyyy HH:mm' }}
+                @if (interview.endedAt) {
+                  <span class="ended"> → {{ interview.endedAt | date:'HH:mm' }}</span>
+                }
+              </p>
+
+              @if (interview.location) {
+                <p class="meta-line">📍 {{ interview.location }}</p>
+              }
+              @if (interview.interviewerName) {
+                <p class="meta-line">👤 {{ interview.interviewerName }}</p>
+              }
+              @if (interview.notes) {
+                <p class="notes-block">{{ interview.notes }}</p>
+              }
+              @if (interview.feedback) {
+                <p class="feedback-block"><strong>Feedback :</strong> {{ interview.feedback }}</p>
+              }
+            </div>
+
+            <div class="card-actions">
+              @if (interview.status === 'SCHEDULED') {
+                <div class="status-actions">
+                  <span class="actions-label">Marquer comme :</span>
+                  @for (opt of statusOptions; track opt.value) {
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-sm"
+                      [disabled]="statusChangingId() === interview.id"
+                      (click)="changeStatus(interview, opt.value)"
+                    >
+                      {{ opt.label }}
+                    </button>
+                  }
+                </div>
+              }
+
+              <div class="row-actions">
+                <button type="button" class="btn btn-secondary btn-sm" (click)="openEditForm(interview)">
+                  Modifier
+                </button>
+                <button type="button" class="btn btn-ghost btn-sm btn-delete" (click)="promptDelete(interview.id)">
+                  Supprimer
+                </button>
+              </div>
+            </div>
+
+            @if (deletingInterviewId() === interview.id) {
+              <div class="delete-confirm">
+                <p>Supprimer cet entretien ?</p>
+                <div class="delete-actions">
+                  <button type="button" class="btn btn-danger btn-sm" (click)="confirmDelete(interview.id)">
+                    Confirmer
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="cancelDelete()">
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            }
+          </li>
+        }
+      </ul>
+    }
+  }
+
+</section>

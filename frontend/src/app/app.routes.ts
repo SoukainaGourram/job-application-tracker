@@ -82,7 +82,7 @@ export const routes: Routes = [
       {
         path: 'interviews',
         loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
+          import('./features/interviews/interviews-page/interviews-page.component').then(m => m.InterviewsPageComponent),
         title: 'Entretiens — JobTrack',
       },
       // ── Companies Module (Phase 5) ──────────────────────────────────────────

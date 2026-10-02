@@ -1,0 +1,101 @@
+<div class="interviews-page">
+
+  <header class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">Mes entretiens</h1>
+      <p class="page-subtitle">
+        Vue consolidée des entretiens liés à vos candidatures en cours de process
+      </p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/applications" class="btn btn-secondary">Candidatures</a>
+      <a routerLink="/pipeline" class="btn btn-primary">Pipeline Kanban</a>
+    </div>
+  </header>
+
+  <section class="filter-card">
+    <label class="filter-label" for="interview-status-filter">Filtrer par statut</label>
+    <select
+      id="interview-status-filter"
+      class="select-control"
+      [ngModel]="statusFilter()"
+      (ngModelChange)="statusFilter.set($event)"
+    >
+      @for (opt of statusFilterOptions; track opt.value) {
+        <option [value]="opt.value">{{ opt.label }}</option>
+      }
+    </select>
+  </section>
+
+  @if (loading()) {
+    <div class="state-container loading-state">
+      <div class="spinner"></div>
+      <p>Chargement des entretiens…</p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="state-container error-state">
+      <p>{{ errorMessage() }}</p>
+      <button type="button" class="btn btn-secondary" (click)="loadInterviews()">Réessayer</button>
+    </div>
+  } @else if (filteredInterviews().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">📅</div>
+      <h3>Aucun entretien à afficher</h3>
+      <p>
+        Planifiez des entretiens depuis le détail d'une candidature (statuts Screening, Entretien ou Offre).
+      </p>
+      <a routerLink="/applications" class="btn btn-primary">Voir mes candidatures</a>
+    </div>
+  } @else {
+    <div class="interviews-table-wrap">
+      <table class="interviews-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Candidature</th>
+            <th>Type</th>
+            <th>Statut</th>
+            <th>Lieu / contact</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of filteredInterviews(); track item.id) {
+            <tr>
+              <td class="col-date">
+                {{ item.scheduledAt | date:'dd/MM/yyyy HH:mm' }}
+              </td>
+              <td class="col-app">
+                <span class="offer-title">{{ item.offerTitle }}</span>
+                <span class="company-name">{{ item.companyName }}</span>
+              </td>
+              <td>{{ getTypeLabel(item.type) }}</td>
+              <td>
+                <span class="status-badge" [ngClass]="getStatusClass(item.status)">
+                  {{ getStatusLabel(item.status) }}
+                </span>
+              </td>
+              <td class="col-meta">
+                @if (item.location) {
+                  <span>{{ item.location }}</span>
+                }
+                @if (item.interviewerName) {
+                  <span class="interviewer">{{ item.interviewerName }}</span>
+                }
+                @if (!item.location && !item.interviewerName) {
+                  <span class="muted">—</span>
+                }
+              </td>
+              <td class="col-action">
+                <a [routerLink]="['/applications', item.applicationId]" class="link-detail">
+                  Ouvrir candidature →
+                </a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+</div>

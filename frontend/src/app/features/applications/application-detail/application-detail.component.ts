@@ -5,11 +5,12 @@ import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { ApplicationService } from '../../../core/services/application.service';
 import { Application, ApplicationHistory, ApplicationStatus } from '../../../core/models/application.models';
+import { InterviewsSectionComponent } from '../../interviews/interviews-section/interviews-section.component';
 
 @Component({
   selector: 'app-application-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, InterviewsSectionComponent],
   templateUrl: './application-detail.component.html',
   styleUrl: './application-detail.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
