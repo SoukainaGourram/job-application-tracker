@@ -112,6 +112,19 @@
   gap: 0.625rem;
   flex: 1;
   min-width: 0;
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  padding: 0.25rem;
+  transition: background 0.15s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+
+    .user-name {
+      color: #a5b4fc;
+    }
+  }
 }
 
 .user-avatar {

@@ -119,7 +119,7 @@ export const routes: Routes = [
       {
         path: 'profile',
         loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
+          import('./features/profile/profile.component').then(m => m.ProfileComponent),
         title: 'Profil — JobTrack',
       },
       {

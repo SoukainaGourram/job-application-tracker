@@ -27,6 +27,7 @@ export class MainLayoutComponent {
     { label: 'Entretiens',    icon: 'calendar',      route: '/interviews' },
     { label: 'Entreprises',   icon: 'building',      route: '/companies' },
     { label: 'Notifications', icon: 'bell',          route: '/notifications' },
+    { label: 'Profil',        icon: 'user',          route: '/profile' },
   ];
 
   logout(): void {
