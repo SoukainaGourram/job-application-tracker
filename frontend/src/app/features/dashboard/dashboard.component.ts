@@ -1,87 +1,187 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  inject,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { DashboardService } from '../../core/services/dashboard.service';
+import { DashboardStats } from '../../core/models/dashboard.models';
+import { ApplicationStatus } from '../../core/models/application.models';
+import {
+  InterviewType,
+  INTERVIEW_TYPE_LABELS,
+} from '../../core/models/interview.models';
+
+interface StatusBarItem {
+  status: ApplicationStatus;
+  label: string;
+  count: number;
+  percentage: number;
+  color: string;
+}
+
+const STATUS_METADATA: Record<ApplicationStatus, { label: string; color: string }> = {
+  TO_APPLY:   { label: 'À postuler',    color: '#f59e0b' },
+  APPLIED:    { label: 'Postulé',       color: '#3b82f6' },
+  SCREENING:  { label: 'Screening RH',  color: '#8b5cf6' },
+  INTERVIEW:  { label: 'Entretien',     color: '#06b6d4' },
+  OFFER:      { label: 'Offre reçue',   color: '#10b981' },
+  ACCEPTED:   { label: 'Acceptée',      color: '#22c55e' },
+  REJECTED:   { label: 'Refusée',       color: '#ef4444' },
+  WITHDRAWN:  { label: 'Retirée',       color: '#6b7280' },
+};
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  template: `
-    <div class="dashboard-placeholder">
-      <div class="welcome-card">
-        <div class="icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-          </svg>
-        </div>
-        <h1>Bienvenue sur JobTrack</h1>
-        <p>
-          Bonjour <strong>{{ currentUser()?.firstName }}</strong> ! 
-          Votre espace de suivi de candidatures est prêt.
-        </p>
-        <p class="hint">Le dashboard complet sera disponible en Phase 6.</p>
-        <div class="chips">
-          <span class="chip">✅ Authentification active</span>
-          <span class="chip">🔐 JWT valide</span>
-          <span class="chip chip--role">Rôle : {{ currentUser()?.role }}</span>
-        </div>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .dashboard-placeholder {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: calc(100vh - 4rem);
-      padding: 2rem;
-    }
-    .welcome-card {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 1.25rem;
-      padding: 3rem 2.5rem;
-      text-align: center;
-      max-width: 520px;
-      width: 100%;
-    }
-    .icon {
-      width: 64px;
-      height: 64px;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      border-radius: 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 1.5rem;
-      svg { width: 32px; height: 32px; stroke: white; }
-    }
-    h1 { font-size: 1.75rem; font-weight: 700; color: #fff; margin: 0 0 0.75rem; }
-    p { color: rgba(255,255,255,0.6); margin: 0 0 0.5rem; line-height: 1.6; }
-    p.hint { font-size: 0.875rem; color: rgba(255,255,255,0.35); margin-top: 0.75rem; }
-    strong { color: rgba(255,255,255,0.9); }
-    .chips { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem; }
-    .chip {
-      background: rgba(99,102,241,0.15);
-      border: 1px solid rgba(99,102,241,0.3);
-      color: #a5b4fc;
-      padding: 0.375rem 0.875rem;
-      border-radius: 999px;
-      font-size: 0.8125rem;
-      font-weight: 500;
-    }
-    .chip--role {
-      background: rgba(34,197,94,0.12);
-      border-color: rgba(34,197,94,0.3);
-      color: #86efac;
-    }
-  `],
+  imports: [CommonModule, RouterLink],
+  templateUrl: './dashboard.component.html',
+  styleUrl: './dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent implements OnInit {
   private authService = inject(AuthService);
-  readonly currentUser = this.authService.currentUser;
+  private dashboardService = inject(DashboardService);
+
+  readonly stats = signal<DashboardStats | null>(null);
+  readonly loading = signal<boolean>(true);
+  readonly errorMessage = signal<string | null>(null);
+
+  /** User's first name for greeting */
+  readonly userFirstName = computed(() => {
+    return this.authService.currentUser()?.firstName || 'Candidat';
+  });
+
+  /** Computed distribution list with percentage & colors */
+  readonly statusDistributionBars = computed<StatusBarItem[]>(() => {
+    const s = this.stats();
+    if (!s) return [];
+
+    const total = s.totalApplications || 0;
+    const statuses: ApplicationStatus[] = [
+      'TO_APPLY',
+      'APPLIED',
+      'SCREENING',
+      'INTERVIEW',
+      'OFFER',
+      'ACCEPTED',
+      'REJECTED',
+      'WITHDRAWN',
+    ];
+
+    return statuses.map((status) => {
+      const count = s.applicationsByStatus?.[status] ?? 0;
+      const percentage = total > 0 ? (count / total) * 100 : 0;
+      const meta = STATUS_METADATA[status];
+
+      return {
+        status,
+        label: meta.label,
+        count,
+        percentage,
+        color: meta.color,
+      };
+    });
+  });
 
   ngOnInit(): void {
-    // Fetch fresh user data from /api/auth/me
-    this.authService.fetchCurrentUser().subscribe();
+    this.loadDashboard();
+    // Refresh user profile if first name isn't set yet
+    if (!this.authService.currentUser()?.firstName) {
+      this.authService.fetchCurrentUser().subscribe();
+    }
+  }
+
+  loadDashboard(): void {
+    this.loading.set(true);
+    this.errorMessage.set(null);
+
+    this.dashboardService.getStats().subscribe({
+      next: (data) => {
+        this.stats.set(data);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.errorMessage.set(
+          'Impossible de récupérer les statistiques du tableau de bord. Veuillez vérifier votre connexion.'
+        );
+        this.loading.set(false);
+      },
+    });
+  }
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+
+  getStatusBadgeClass(status: ApplicationStatus): string {
+    switch (status) {
+      case 'TO_APPLY': return 'badge-to-apply';
+      case 'APPLIED': return 'badge-applied';
+      case 'SCREENING': return 'badge-screening';
+      case 'INTERVIEW': return 'badge-interview';
+      case 'OFFER': return 'badge-offer';
+      case 'ACCEPTED': return 'badge-accepted';
+      case 'REJECTED': return 'badge-rejected';
+      case 'WITHDRAWN': return 'badge-withdrawn';
+      default: return '';
+    }
+  }
+
+  getStatusLabel(status: ApplicationStatus): string {
+    return STATUS_METADATA[status]?.label ?? status;
+  }
+
+  getTypeLabel(type: InterviewType): string {
+    return INTERVIEW_TYPE_LABELS[type] ?? type;
+  }
+
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: 'short',
+      });
+    } catch {
+      return dateStr;
+    }
+  }
+
+  formatTime(dateStr: string): string {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleTimeString('fr-FR', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return '';
+    }
+  }
+
+  getMonthAbbr(dateStr: string): string {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('fr-FR', { month: 'short' });
+    } catch {
+      return '';
+    }
+  }
+
+  getDayNumber(dateStr: string): string {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      return String(date.getDate());
+    } catch {
+      return '';
+    }
   }
 }

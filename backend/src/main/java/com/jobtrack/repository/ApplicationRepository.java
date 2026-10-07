@@ -28,4 +28,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Long>,
     Page<Application> findAllByUserId(Long userId, Pageable pageable);
 
     void deleteByIdAndUserId(Long id, Long userId);
+
+    long countByUserId(Long userId);
+
+    long countByUserIdAndStatus(Long userId, ApplicationStatus status);
 }

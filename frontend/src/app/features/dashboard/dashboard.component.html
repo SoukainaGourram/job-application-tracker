@@ -1,0 +1,247 @@
+<div class="dashboard-page">
+
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <header class="dashboard-header">
+    <div class="header-intro">
+      <h1 class="page-title">
+        Bonjour <span class="user-highlight">{{ userFirstName() }}</span> 👋
+      </h1>
+      <p class="page-subtitle">Voici l'état actuel de votre recherche d'emploi et de vos candidatures.</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/applications" class="btn btn-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <line x1="3" y1="9" x2="21" y2="9"/>
+          <line x1="9" y1="21" x2="9" y2="9"/>
+        </svg>
+        Toutes les candidatures
+      </a>
+      <a routerLink="/offers/new" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Ajouter une offre
+      </a>
+    </div>
+  </header>
+
+  <!-- ── Loading state ─────────────────────────────────────────────────── -->
+  @if (loading()) {
+    <div class="state-container">
+      <div class="spinner"></div>
+      <p>Chargement des statistiques de votre tableau de bord...</p>
+    </div>
+  }
+
+  <!-- ── Error state ──────────────────────────────────────────────────── -->
+  @else if (errorMessage()) {
+    <div class="state-container error">
+      <div class="error-icon">⚠️</div>
+      <h3>Oups ! Une erreur est survenue</h3>
+      <p>{{ errorMessage() }}</p>
+      <button class="btn btn-primary" (click)="loadDashboard()">Réessayer</button>
+    </div>
+  }
+
+  <!-- ── Content (Success) ────────────────────────────────────────────── -->
+  @else if (stats(); as s) {
+
+    <!-- KPI Cards -->
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon kpi-icon--apps">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </div>
+        <div class="kpi-data">
+          <span class="kpi-label">Candidatures</span>
+          <span class="kpi-value">{{ s.totalApplications }}</span>
+        </div>
+        <a routerLink="/applications" class="kpi-link" title="Voir les candidatures">→</a>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon kpi-icon--interviews">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+        <div class="kpi-data">
+          <span class="kpi-label">Entretiens</span>
+          <span class="kpi-value">{{ s.totalInterviews }}</span>
+        </div>
+        <a routerLink="/interviews" class="kpi-link" title="Voir les entretiens">→</a>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon kpi-icon--offers">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+          </svg>
+        </div>
+        <div class="kpi-data">
+          <span class="kpi-label">Offres ciblées</span>
+          <span class="kpi-value">{{ s.totalOffers }}</span>
+        </div>
+        <a routerLink="/offers" class="kpi-link" title="Voir les offres">→</a>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon kpi-icon--companies">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
+            <path d="M6 12H4a2 2 0 0 0-2 2v8h4"/>
+            <path d="M18 9h2a2 2 0 0 1 2 2v11h-4"/>
+            <path d="M10 6h4"/>
+            <path d="M10 10h4"/>
+            <path d="M10 14h4"/>
+            <path d="M10 18h4"/>
+          </svg>
+        </div>
+        <div class="kpi-data">
+          <span class="kpi-label">Entreprises</span>
+          <span class="kpi-value">{{ s.totalCompanies }}</span>
+        </div>
+        <a routerLink="/companies" class="kpi-link" title="Voir les entreprises">→</a>
+      </div>
+    </section>
+
+    <!-- ── Pipeline Distribution Chart (CSS/SVG) ────────────────────────── -->
+    <section class="section-card distribution-section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Répartition du pipeline</h2>
+          <p class="section-subtitle">Visualisation de l'avancement de vos candidatures par étape</p>
+        </div>
+        <a routerLink="/pipeline" class="btn btn-secondary btn-sm">Ouvrir le Kanban</a>
+      </div>
+
+      @if (s.totalApplications === 0) {
+        <div class="empty-block">
+          <p>Aucune candidature pour le moment. Commencez par postuler à une offre !</p>
+        </div>
+      } @else {
+        <!-- Stacked progress bar -->
+        <div class="stacked-bar" role="progressbar" aria-label="Répartition du pipeline">
+          @for (bar of statusDistributionBars(); track bar.status) {
+            @if (bar.percentage > 0) {
+              <div
+                class="stacked-bar-segment"
+                [style.width.%]="bar.percentage"
+                [style.background-color]="bar.color"
+                [title]="bar.label + ': ' + bar.count + ' (' + bar.percentage.toFixed(1) + '%)'"
+              ></div>
+            }
+          }
+        </div>
+
+        <!-- Status grid items -->
+        <div class="status-grid">
+          @for (item of statusDistributionBars(); track item.status) {
+            <div class="status-item" [class.status-item--empty]="item.count === 0">
+              <div class="status-item-header">
+                <span class="status-dot" [style.background-color]="item.color"></span>
+                <span class="status-name">{{ item.label }}</span>
+                <span class="status-count">{{ item.count }}</span>
+              </div>
+              <div class="progress-track">
+                <div
+                  class="progress-fill"
+                  [style.width.%]="item.percentage"
+                  [style.background-color]="item.color"
+                ></div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+    <!-- ── Two Columns : Recent Applications & Upcoming Interviews ─────── -->
+    <div class="dashboard-columns">
+
+      <!-- Column 1: Recent Applications -->
+      <section class="section-card column-card">
+        <div class="section-header">
+          <h2 class="section-title">Dernières candidatures</h2>
+          <a routerLink="/applications" class="view-all-link">Voir tout →</a>
+        </div>
+
+        @if (s.recentApplications.length === 0) {
+          <div class="empty-block">
+            <p>Aucune candidature récente enregistrée.</p>
+            <a routerLink="/offers" class="btn btn-primary btn-sm">Consulter les offres</a>
+          </div>
+        } @else {
+          <div class="items-list">
+            @for (app of s.recentApplications; track app.id) {
+              <a [routerLink]="['/applications', app.id]" class="list-row">
+                <div class="row-main">
+                  <span class="row-title">{{ app.offerTitle }}</span>
+                  <span class="row-subtitle">
+                    {{ app.companyName }}
+                    @if (app.city) { • {{ app.city }} }
+                  </span>
+                </div>
+                <div class="row-meta">
+                  <span class="badge" [ngClass]="getStatusBadgeClass(app.status)">
+                    {{ getStatusLabel(app.status) }}
+                  </span>
+                  <span class="row-date">{{ formatDate(app.createdAt) }}</span>
+                </div>
+              </a>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Column 2: Upcoming Interviews -->
+      <section class="section-card column-card">
+        <div class="section-header">
+          <h2 class="section-title">Prochains entretiens</h2>
+          <a routerLink="/interviews" class="view-all-link">Voir tout →</a>
+        </div>
+
+        @if (s.upcomingInterviews.length === 0) {
+          <div class="empty-block">
+            <p>Aucun entretien planifié à venir.</p>
+            <span class="hint">Vos prochains rendez-vous apparaîtront ici.</span>
+          </div>
+        } @else {
+          <div class="items-list">
+            @for (interview of s.upcomingInterviews; track interview.id) {
+              <a [routerLink]="['/applications', interview.applicationId]" class="list-row interview-row">
+                <div class="interview-calendar-badge">
+                  <span class="cal-month">{{ getMonthAbbr(interview.scheduledAt) }}</span>
+                  <span class="cal-day">{{ getDayNumber(interview.scheduledAt) }}</span>
+                </div>
+                <div class="row-main">
+                  <span class="row-title">{{ interview.offerTitle }}</span>
+                  <span class="row-subtitle">
+                    {{ interview.companyName }} • {{ getTypeLabel(interview.type) }}
+                    @if (interview.location) { • {{ interview.location }} }
+                  </span>
+                </div>
+                <div class="row-meta">
+                  <span class="interview-time">{{ formatTime(interview.scheduledAt) }}</span>
+                  <span class="badge badge-interview">Planifié</span>
+                </div>
+              </a>
+            }
+          </div>
+        }
+      </section>
+
+    </div>
+
+  }
+
+</div>

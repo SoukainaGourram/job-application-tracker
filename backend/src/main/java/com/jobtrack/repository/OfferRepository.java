@@ -31,4 +31,6 @@ public interface OfferRepository extends JpaRepository<Offer, Long>, JpaSpecific
     @Modifying
     @Query("UPDATE Offer o SET o.company = NULL WHERE o.company.id = :companyId")
     void clearCompanyReference(@Param("companyId") Long companyId);
+
+    long countByUserId(Long userId);
 }

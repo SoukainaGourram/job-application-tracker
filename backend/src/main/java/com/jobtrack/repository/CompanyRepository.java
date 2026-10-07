@@ -22,4 +22,6 @@ public interface CompanyRepository extends JpaRepository<Company, Long>, JpaSpec
     List<Company> findAllByUserIdOrderByNameAsc(Long userId);
 
     Page<Company> findAllByUserId(Long userId, Pageable pageable);
+
+    long countByUserId(Long userId);
 }
