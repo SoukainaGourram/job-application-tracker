@@ -12,6 +12,7 @@ import com.jobtrack.mapper.ApplicationHistoryMapper;
 import com.jobtrack.mapper.ApplicationMapper;
 import com.jobtrack.repository.ApplicationHistoryRepository;
 import com.jobtrack.repository.ApplicationRepository;
+import com.jobtrack.repository.InterviewRepository;
 import com.jobtrack.repository.OfferRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -46,6 +47,9 @@ class ApplicationServiceTest {
 
     @Mock
     private ApplicationHistoryRepository applicationHistoryRepository;
+
+    @Mock
+    private InterviewRepository interviewRepository;
 
     @Mock
     private OfferRepository offerRepository;
@@ -224,14 +228,30 @@ class ApplicationServiceTest {
     }
 
     @Test
-    @DisplayName("deleteApplication — supprime la candidature et son historique")
-    void deleteApplication_deletesWithHistory() {
+    @DisplayName("deleteApplication — supprime d'abord les interviews, puis l'historique, puis la candidature")
+    void deleteApplication_deletesInterviewsThenHistoryThenApplication() {
         when(applicationRepository.findByIdAndUserId(100L, 1L)).thenReturn(Optional.of(applicationA));
         when(applicationHistoryRepository.findAllByApplicationIdOrderByChangedAtDesc(100L)).thenReturn(List.of());
 
         applicationService.deleteApplication(100L, userA);
 
-        verify(applicationRepository).delete(applicationA);
+        // Verify order: interviews first, then history, then application
+        var inOrder = inOrder(interviewRepository, applicationHistoryRepository, applicationRepository);
+        inOrder.verify(interviewRepository).deleteAllByApplicationId(100L);
+        inOrder.verify(applicationHistoryRepository).deleteAll(any());
+        inOrder.verify(applicationRepository).delete(applicationA);
+    }
+
+    @Test
+    @DisplayName("deleteApplication — l'Offer reste intacte après la suppression de la candidature")
+    void deleteApplication_offerNotDeleted() {
+        when(applicationRepository.findByIdAndUserId(100L, 1L)).thenReturn(Optional.of(applicationA));
+        when(applicationHistoryRepository.findAllByApplicationIdOrderByChangedAtDesc(100L)).thenReturn(List.of());
+
+        applicationService.deleteApplication(100L, userA);
+
+        // Offer repository must NOT be touched
+        verifyNoInteractions(offerRepository);
     }
 
     @Test

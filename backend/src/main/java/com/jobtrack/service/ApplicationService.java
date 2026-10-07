@@ -13,6 +13,7 @@ import com.jobtrack.mapper.ApplicationMapper;
 import com.jobtrack.repository.ApplicationHistoryRepository;
 import com.jobtrack.repository.ApplicationRepository;
 import com.jobtrack.repository.ApplicationSpecification;
+import com.jobtrack.repository.InterviewRepository;
 import com.jobtrack.repository.OfferRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,7 @@ public class ApplicationService {
 
     private final ApplicationRepository applicationRepository;
     private final ApplicationHistoryRepository applicationHistoryRepository;
+    private final InterviewRepository interviewRepository;
     private final OfferRepository offerRepository;
     private final ApplicationMapper applicationMapper;
     private final ApplicationHistoryMapper applicationHistoryMapper;
@@ -171,13 +173,16 @@ public class ApplicationService {
         Application application = applicationRepository.findByIdAndUserId(id, user.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Application", id));
 
-        // Delete associated history first
+        // Delete associated interviews first (before history, before application)
+        interviewRepository.deleteAllByApplicationId(id);
+
+        // Delete associated history
         List<ApplicationHistory> histories = applicationHistoryRepository
                 .findAllByApplicationIdOrderByChangedAtDesc(id);
         applicationHistoryRepository.deleteAll(histories);
 
         applicationRepository.delete(application);
-        log.info("Deleted application ID {} and its history for user ID {}", id, user.getId());
+        log.info("Deleted application ID {} with its interviews and history for user ID {}", id, user.getId());
     }
 
     @Transactional(readOnly = true)
